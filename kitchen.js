@@ -1,6 +1,5 @@
 // ==========================================
-// БАЗА ТАРИФОВ И ЛОГИКА KITCHEN (УФ-печать, с НДС)
-// Нижние цены (с НДС)
+// БАЗА ТАРИФОВ И ЛОГИКА: РЕКЛАМНАЯ КУХНЯ (УФ-печать, с НДС)
 // ==========================================
 
 const kitchenPrices = {
@@ -9,7 +8,7 @@ const kitchenPrices = {
         { max: 10, price: 660 },
         { max: 50, price: 320 },
         { max: 100, price: 200 },
-        { max: Infinity, price: 165 } // 200-500 и выше
+        { max: Infinity, price: 165 }
     ],
 
     // 2. Медали, бейджи, номерки и т.д.
@@ -17,7 +16,7 @@ const kitchenPrices = {
         { max: 10, price: 920 },
         { max: 50, price: 390 },
         { max: 100, price: 240 },
-        { max: Infinity, price: 200 } // 200-500 и выше
+        { max: Infinity, price: 200 }
     ],
 
     // 3. Ежедневники, блокноты, powerbank (размер А5 до 15х15 см)
@@ -25,7 +24,7 @@ const kitchenPrices = {
         { max: 10, price: 1050 },
         { max: 50, price: 610 },
         { max: 100, price: 540 },
-        { max: Infinity, price: 515 } // 200-500 и выше
+        { max: Infinity, price: 515 }
     ],
 
     // 4. Термокружки, термосы, бокалы, елочные шары и т.д.
@@ -33,7 +32,7 @@ const kitchenPrices = {
         { max: 10, price: 1900 },
         { max: 50, price: 940 },
         { max: 100, price: 580 },
-        { max: Infinity, price: 540 } // 200-500 и выше
+        { max: Infinity, price: 540 }
     ],
 
     // 5. Чехлы для смартфонов
@@ -41,7 +40,7 @@ const kitchenPrices = {
         { max: 10, price: 2800 },
         { max: 50, price: 1900 },
         { max: 100, price: 1300 },
-        { max: Infinity, price: 990 } // 200-500 и выше
+        { max: Infinity, price: 990 }
     ]
 };
 
