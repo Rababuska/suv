@@ -56,7 +56,7 @@
                 <label style="cursor: pointer; margin-right: 10px;"><input type="checkbox" id="clicheExists"> Клише есть</label>
                 <span id="clicheAreaBlock">
                     Размер клише (мм): <input type="number" id="clicheW" class="mm-input" value="50" min="0"> x <input type="number" id="clicheH" class="mm-input" value="50" min="0">
-                    <span id="clicheAreaOut" style="color: #888; font-size: 12px;">(25 см²)</span>
+                    <span id="clicheAreaOut" style="color: #888; font-size: 12px;">(36.0 см²)</span>
                 </span>
             </span>
 
@@ -259,7 +259,7 @@
 var currentMode = 'order'; 
 var activeService = null; 
 
-// Полный каталог услуг всех поставщиков
+// Каталог услуг
 const servicesCatalog = [
     // --- РЕКЛАМНАЯ КУХНЯ: УФ-ПЕЧАТЬ (с НДС) ---
     { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки рекламная кухня kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
@@ -304,10 +304,10 @@ const servicesCatalog = [
     { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q) => calcDtfArea(q) },
 
     // --- ЭКСКЛЮЗИВ (с НДС) ---
-    { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calcExclusiveTiers('emboss_notebook', q) },
-    { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calcExclusiveTiers('emboss_sheet', q) },
-    { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calcExclusiveTiers('bags', q) },
-    { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q) => calcExclusiveTiers('die_cutting', q) }
+    { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_notebook', q) },
+    { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_sheet', q) },
+    { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calculateExclusive('bags', q) },
+    { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q) => calculateExclusive('die_cutting', q) }
 ];
 
 function getTierPrice(tiers, q) {
@@ -343,26 +343,6 @@ function calcDtfArea(q) {
     return Math.round(singleCost * q);
 }
 
-function calcExclusiveTiers(type, q) {
-    if (typeof exclusivePrices === 'undefined') return 0;
-    let data = exclusivePrices[type];
-    if (!data) return 0;
-    let tier = data.tiers.find(t => q <= t.max);
-    let runCost = tier ? (tier.type === 'total' ? tier.price : tier.price * q) : 0;
-    let extraCost = 0;
-    if ((type === 'emboss_notebook' || type === 'emboss_sheet') && !$('#clicheExists').is(':checked')) {
-        let w = Number($('#clicheW').val()) || 0;
-        let h = Number($('#clicheH').val()) || 0;
-        if (w > 0 && h > 0) {
-            let area = ((w + 10) / 10) * ((h + 10) / 10);
-            extraCost = Math.max(3500, Math.round(area * 250));
-        } else {
-            extraCost = 3500;
-        }
-    }
-    return runCost + extraCost;
-}
-
 $(document).ready(function() {
     // Переключение Заказ / Склад (Алматы)
     $('#btn-order').click(function() {
@@ -383,7 +363,7 @@ $(document).ready(function() {
         calc();
     });
 
-    // Обработчик умного поиска
+    // Поиск нанесения
     $('#serviceSearch').on('input focus', function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
@@ -411,7 +391,6 @@ $(document).ready(function() {
             let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
 
-            // Если VIPLINE (без НДС), считаем реальный расход с учетом налога для честного сравнения
             if (!item.vat) {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
@@ -486,8 +465,11 @@ $(document).ready(function() {
     $('#clicheW, #clicheH').on('input', function() {
         let w = Number($('#clicheW').val()) || 0;
         let h = Number($('#clicheH').val()) || 0;
-        let area = Math.round(((w + 10) / 10) * ((h + 10) / 10));
-        $('#clicheAreaOut').text(`(${area} см²)`);
+        let area = 0;
+        if (w > 0 && h > 0) {
+            area = ((w + 10) * (h + 10)) / 100;
+        }
+        $('#clicheAreaOut').text(`(${area.toFixed(1)} см²)`);
         calc();
     });
 
@@ -513,7 +495,7 @@ function calc() {
 
     let quantity = T.C5 || 1; 
 
-    // Расчет нанесения из каталога
+    // Расчет выбранного нанесения
     let supplierCostWithoutVat = 0; 
     let supplierCostWithVat = 0;   
     let autoCashExpense = 0;       
@@ -548,7 +530,6 @@ function calc() {
         $('#currency-symbol').text('₽');
     }
     
-    // Синхронизация Кэшбека
     if ($('input[name="K1"]').is(':focus')) { T.K3 = Math.round(T.K1 * 1.7052); }
     if ($('input[name="K3"]').is(':focus')) { T.K1 = Math.round(T.K3 / 1.7052); }
     
