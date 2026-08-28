@@ -261,12 +261,12 @@ var activeService = null;
 
 // Полный каталог услуг всех поставщиков
 const servicesCatalog = [
-    // --- KITCHEN: УФ-ПЕЧАТЬ (с НДС) ---
-    { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
-    { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
-    { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
-    { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
-    { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов kitchen китчен', name: 'УФ: Чехлы для смартфонов [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
+    // --- РЕКЛАМНАЯ КУХНЯ: УФ-ПЕЧАТЬ (с НДС) ---
+    { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки рекламная кухня kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
+    { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки рекламная кухня kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
+    { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки рекламная кухня kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
+    { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары рекламная кухня kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
+    { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов рекламная кухня kitchen китчен', name: 'УФ: Чехлы для смартфонов [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
 
     // --- КВАНТ: ГРАВИРОВКА (с НДС) ---
     { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
@@ -388,6 +388,7 @@ $(document).ready(function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#searchResults');
+        let markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;
         $res.empty();
 
         if (query.length === 0) {
@@ -406,12 +407,24 @@ $(document).ready(function() {
         }
 
         matches.forEach(item => {
-            let cost = item.fn(q);
+            let rawCost = item.fn(q);
+            let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
+
+            // Если VIPLINE (без НДС), считаем реальный расход с учетом налога для честного сравнения
+            if (!item.vat) {
+                let f4_markup = markup * 1.16;
+                let f_f4 = rawCost * f4_markup;
+                displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (прайс ${rawCost.toLocaleString('ru-RU')} без НДС)`;
+            } else {
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`;
+            }
+
             $res.append(`
                 <div class="search-item" data-id="${item.id}">
-                    ${item.name} <span style="font-size:11px; color:#888;">(${taxLabel})</span>
-                    <span class="item-cost">${cost.toLocaleString('ru-RU')} ₸</span>
+                    ${item.name}<br>
+                    <span style="font-size:11px; color:#555;">${taxLabel}</span>
                 </div>
             `);
         });
