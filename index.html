@@ -1,224 +1,328 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>Складской калькулятор</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  
-  <script src="vipline.js"></script>
-  <script src="exclusive.js"></script>
-  <script src="kvant.js"></script>
-
-  <style type="text/css">
-    input { text-align: right; margin-right: 6px; }
-    td:nth-child(3) { width: 50px; }
-    .gray { color: gray; height: 70px; }
-    .gray td input, .gray td input:focus, .gray td input:active { color: gray; border-color: gray; cursor: default; border: none; outline: none !important; }
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Сувенирный калькулятор</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     
-    .supplier-panel { margin: 15px 0; padding: 10px 15px; background-color: #f0f8ff; border: 1px solid #cce5ff; border-radius: 5px; display: inline-block; font-family: Arial, sans-serif; font-size: 14px; vertical-align: top;}
-    .supplier-panel select { margin-right: 10px; padding: 3px; }
-    .supplier-details { border-left: 1px solid #ccc; padding-left: 10px; margin-left: 5px; display: inline-block; vertical-align: top;}
-    .mm-input { width: 45px; padding: 2px; text-align: center; }
-    .delivery-checkbox { margin-top: 12px; font-size: 13px; color: #444; border-top: 1px dashed #ccc; padding-top: 8px; }
-  </style>
+    <script src="vipline.js"></script>
+    <script src="exclusive.js"></script>
+    <script src="kvant.js"></script>
+
+    <style type="text/css">
+        input { text-align: right; margin-right: 6px; }
+        td:nth-child(3) { width: 50px; }
+        .gray { color: gray; height: 70px; }
+        .gray td input, .gray td input:focus, .gray td input:active { color: gray; border-color: gray; cursor: default; border: none; outline: none !important; }
+        .bottom-right { position: fixed; bottom: 10px; right: 10px; color: lightgray; font-size: 14px; }
+        .small-input { width: 30px; }
+        .supplier-panel { margin: 15px 0; padding: 10px 15px; background-color: #f0f8ff; border: 1px solid #cce5ff; border-radius: 5px; display: inline-block; font-family: Arial, sans-serif; font-size: 14px; vertical-align: top;}
+        .supplier-panel select { margin-right: 10px; padding: 3px; }
+        .supplier-details { border-left: 1px solid #ccc; padding-left: 10px; margin-left: 5px; display: inline-block; vertical-align: top;}
+        .mm-input { width: 45px; padding: 2px; text-align: center; }
+        .delivery-checkbox { margin-top: 12px; font-size: 13px; color: #444; border-top: 1px dashed #ccc; padding-top: 8px; }
+        .menu button { cursor: pointer; padding: 3px 10px; }
+        .menu button.active { font-weight: bold; background-color: #d0e4ff; border-color: #0066cc; }
+    </style>
 </head>
 <body>
-
-<div class="menu">
-  <a href="index.html"><button>ЗАКАЗ</button></a>
-  <a href="sklad.html"><button>АЛМАТЫ</button></a>
-</div>
-
-<div class="supplier-panel">
-    <strong>Поставщик нанесения:</strong>
-    <select name="supplier" id="supplier">
-        <option value="none">Свой расчет / Другой</option>
-        <option value="vipline">VIPLINE (без НДС)</option>
-        <option value="exclusive">Эксклюзив (с НДС)</option>
-        <option value="kvant">Квант - Гравировка (с НДС)</option>
-    </select>
-    
-    <span id="vipline-settings" class="supplier-details" style="display: none;">
-        <div>
-            <select name="printType" id="printType">
-                <option value="uv">УФ печать</option>
-                <option value="silkscreen">Шелкография</option>
-                <option value="dtf">ДТФ (классика, лого до 10см)</option>
-                <option value="dtf_area">ДТФ (расчет по площади)</option>
-            </select>
-            <select name="itemType" id="itemType"></select>
-            <span id="colors-wrap" style="display: none;">
-                <select name="colors" id="colors">
-                    <option value="colors_1">1 цвет</option>
-                    <option value="colors_2">2 цвета</option>
-                </select>
-            </span>
-            <strong style="margin-left: 15px; color: #d9534f;">VIPLINE: <span id="viplineCostOut">0</span> ₸</strong>
-        </div>
-        
-        <div id="dtf-area-wrap" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc;">
-            <div id="dtf-points">
-                <div class="dtf-point">
-                    <input type="number" class="mm-input dtf-w" placeholder="Ш(мм)" min="0"> x 
-                    <input type="number" class="mm-input dtf-h" placeholder="В(мм)" min="0">
-                    <button type="button" class="remove-dtf-point" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold;">✖</button>
-                </div>
-            </div>
-            <button type="button" id="addDtfPoint" style="font-size: 11px; margin-top: 5px; cursor: pointer;">+ Добавить точку нанесения</button>
-        </div>
-    </span>
-
-    <span id="exclusive-settings" class="supplier-details" style="display: none;">
-        <select name="exType" id="exType">
-            <option value="emboss_notebook">Тиснение на блокноты</option>
-            <option value="emboss_sheet">Тиснение на листовую</option>
-            <option value="bags">Высечка и сборка пакетов</option>
-            <option value="die_cutting">Просто высечка (без пакетов)</option>
-        </select>
-        
-        <span id="cliche-wrap" style="margin-left: 10px;">
-            <label style="cursor: pointer; margin-right: 10px;">
-                <input type="checkbox" id="clicheExists"> Клише есть
-            </label>
-            <span id="cliche-area-wrap">
-                Размер (мм): 
-                <input type="number" id="clicheW" class="mm-input" value="0" min="0" placeholder="Ш"> x 
-                <input type="number" id="clicheH" class="mm-input" value="0" min="0" placeholder="В">
-                <span id="clicheAreaOut" style="color: #888; font-size: 12px; margin-left: 5px;">(0 см²)</span>
-            </span>
-        </span>
-        <strong style="margin-left: 15px; color: #d9534f;">Эксклюзив: <span id="exclusiveCostOut">0</span> ₸</strong>
-    </span>
-
-    <span id="kvant-settings" class="supplier-details" style="display: none;">
-        <select name="kvantType" id="kvantType">
-            <option value="circular_30">Кружки, термосы, бутылки (до 30 см²)</option>
-            <option value="circular_100">Кружки, термосы, бутылки (до 100 см²)</option>
-            <option value="pens_metal">Ручки: Металл</option>
-            <option value="pens_plastic">Ручки: Пластик</option>
-            <option value="pens_glossy">Ручки: Глянцевые / лакированные</option>
-            <option value="powerbanks">Сувенирные изделия (Повербанки)</option>
-            <option value="flash_drives">Флешки</option>
-            <option value="keychains">Брелоки, зажигалки, визитницы</option>
-            <option value="backpacks_plate">Рюкзаки и сумки (на шильду)</option>
-            <option value="backpacks_body">Рюкзаки и сумки (на ткань / кожу)</option>
-            <option value="awards">Награды (стекло, акрил, плакетки)</option>
-        </select>
-        <strong style="margin-left: 15px; color: #d9534f;">Квант: <span id="kvantCostOut">0</span> ₸</strong>
-    </span>
-    
-    <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
-        <label style="cursor: pointer;">
-            <input type="checkbox" id="addDeliveryCost" checked> 
-            Включить доставку от поставщика в "Расходы нал" (VIPLINE: 4000 тг / Эксклюзив, Квант: 3000 тг)
-        </label>
+    <div class="menu">
+        <button type="button" id="btn-order" class="active">ЗАКАЗ</button>
+        <button type="button" id="btn-sklad">АЛМАТЫ</button>
     </div>
-</div>
 
-<table>
-  <tbody>
-    <tr>
-      <td>Товар</td>
-      <td>
-        <select name="product">
-          <option value="2615;1255">бутылка Tonic</option>
-          <option value="3450;2584">ежедневник Hamilton</option>
-          <option value="2300;1649">ежедневник Simply</option>
-          <option value="3070;1362">кружка Yasna</option>
-          <option value="450;231">ручка Factor</option>
-          <option value="570;422">ручка Factor Touch</option>
-          <option value="590;450">ручка Factor Black</option>
-          <option value="230;104">ручка N16</option>
-          <option value="195;94">ручка Plane</option>
-          <option value="180;88">ручка Navi</option>
-          <option value="1600;1138">сумка Carryme</option>
-          <option value="7520;3610">термокружка Kick</option>
-          <option value="4800;3524">термос Stripe</option>
-          <option value="4800;3535">магнитный антистресс Everie</option>
-          <option value="6000;4324">Ланчбокс Yummybox</option>
-          <option value="3705;2144">Бейсболка Washington</option>
+    <div class="supplier-panel">
+        <strong>Поставщик:</strong>
+        <select name="supplier" id="supplier">
+            <option value="none">Свой расчет / Другой</option>
+            <option value="vipline">VIPLINE (без НДС)</option>
+            <option value="exclusive">Эксклюзив (с НДС)</option>
+            <option value="kvant">Квант - Гравировка (с НДС)</option>
         </select>
-      </td>
-      <td></td>
-      <td>НДС</td>
-      <td>
-        <input id="withoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
-        <input id="withVAT" name="vat" value="withVAT" checked type="radio"> С НДС
-      </td>
-      <td></td>
-      <td>Курс</td>
-      <td><input name="PB2" value="7" type="text">₽/₸</td>
-    </tr>
-    <tr>
-      <td>Цены в долларах</td>
-      <td>
-        <label style="cursor: pointer;">
-          <input type="checkbox" id="showUsd" name="showUsd"> Включить USD ($)
-        </label>
-      </td>
-      <td></td>
-      <td><span class="usd-rate-label" style="display: none;">Курс доллара</span></td>
-      <td>
-        <span id="usd-rate-wrap" style="display: none;">
-          <input name="usdRate" id="usdRate" value="480" type="number" step="0.5" style="width: 55px;"> ₸
+        
+        <span id="vipline-settings" class="supplier-details" style="display: none;">
+            <div>
+                <select name="printType" id="printType">
+                    <option value="uv">УФ печать</option>
+                    <option value="silkscreen">Шелкография</option>
+                    <option value="dtf">ДТФ (классика, лого до 10см)</option>
+                    <option value="dtf_area">ДТФ (расчет по площади)</option>
+                </select>
+                <select name="itemType" id="itemType"></select>
+                <span id="colors-wrap" style="display: none;">
+                    <select name="colors" id="colors">
+                        <option value="colors_1">1 цвет</option>
+                        <option value="colors_2">2 цвета</option>
+                    </select>
+                </span>
+                <strong style="margin-left: 15px; color: #d9534f;">VIPLINE: <span id="viplineCostOut">0</span> ₸</strong>
+            </div>
+            
+            <div id="dtf-area-wrap" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                <div id="dtf-points">
+                    <div class="dtf-point">
+                        <input type="number" class="mm-input dtf-w" placeholder="Ш(мм)" min="0"> x 
+                        <input type="number" class="mm-input dtf-h" placeholder="В(мм)" min="0">
+                        <button type="button" class="remove-dtf-point" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold;">✖</button>
+                    </div>
+                </div>
+                <button type="button" id="addDtfPoint" style="font-size: 11px; margin-top: 5px; cursor: pointer;">+ Добавить точку нанесения</button>
+            </div>
         </span>
-      </td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>Тираж</td>
-      <td><input name="C5" value="1" type="text">шт.</td>
-      <td></td>
-      <td>Расходы с НДС</td>
-      <td><input name="F3" value="0" type="text">₸ </td>
-      <td></td>
-      <td>Накрутка</td>
-      <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин = 1.25; макс = 9)</td>
-    </tr>
-    <tr>
-      <td>Приладка</td>
-      <td><input name="C6" value="0" type="text">шт.</td>
-      <td></td>
-      <td>Расходы без НДС</td>
-      <td><input name="F4" value="0" type="text">₸ </td>
-    </tr>
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Расходы нал</td>
-      <td><input name="F5" value="0" type="text">₸ </td>
-    </tr>
-    <tr>
-      <td>Продажная цена за единицу</td>
-      <td><input name="C8" value="0" type="text">₸</td>
-      <td></td>
-      <td>Расход за тираж</td>
-      <td><input name="F9" value="0" type="text">₸</td>
-    </tr>
-    <tr class="usd-row" style="display: none; color: #1e7e34;">
-      <td>Продажная цена за ед. ($)</td>
-      <td><input name="usdUnit" value="$ 0" type="text" readonly style="color: #1e7e34; font-weight: bold;"></td>
-    </tr>
-    <tr>
-      <td>Цена за тираж</td>
-      <td><input name="C9" value="0" type="text">₸</td>
-    </tr>
-    <tr class="usd-row" style="display: none; color: #1e7e34;">
-      <td>Цена за тираж ($)</td>
-      <td><input name="usdTotal" value="$ 0" type="text" readonly style="color: #1e7e34; font-weight: bold;"></td>
-    </tr>
-  </tbody>
-</table>
+
+        <span id="exclusive-settings" class="supplier-details" style="display: none;">
+            <select name="exType" id="exType">
+                <option value="emboss_notebook">Тиснение на блокноты</option>
+                <option value="emboss_sheet">Тиснение на листовую</option>
+                <option value="bags">Высечка и сборка пакетов</option>
+                <option value="die_cutting">Просто высечка (без пакетов)</option>
+            </select>
+            
+            <span id="cliche-wrap" style="margin-left: 10px;">
+                <label style="cursor: pointer; margin-right: 10px;">
+                    <input type="checkbox" id="clicheExists"> Клише есть
+                </label>
+                <span id="cliche-area-wrap">
+                    Размер (мм): 
+                    <input type="number" id="clicheW" class="mm-input" value="0" min="0" placeholder="Ш"> x 
+                    <input type="number" id="clicheH" class="mm-input" value="0" min="0" placeholder="В">
+                    <span id="clicheAreaOut" style="color: #888; font-size: 12px; margin-left: 5px;">(0 см²)</span>
+                </span>
+            </span>
+            <strong style="margin-left: 15px; color: #d9534f;">Эксклюзив: <span id="exclusiveCostOut">0</span> ₸</strong>
+        </span>
+
+        <span id="kvant-settings" class="supplier-details" style="display: none;">
+            <select name="kvantType" id="kvantType">
+                <option value="circular_30">Кружки, термосы, бутылки (до 30 см²)</option>
+                <option value="circular_100">Кружки, термосы, бутылки (до 100 см²)</option>
+                <option value="pens_metal">Ручки: Металл</option>
+                <option value="pens_plastic">Ручки: Пластик</option>
+                <option value="pens_glossy">Ручки: Глянцевые / лакированные</option>
+                <option value="powerbanks">Сувенирные изделия (Повербанки)</option>
+                <option value="flash_drives">Флешки</option>
+                <option value="keychains">Брелоки, зажигалки, визитницы</option>
+                <option value="backpacks_plate">Рюкзаки и сумки (на шильду)</option>
+                <option value="backpacks_body">Рюкзаки и сумки (на ткань / кожу)</option>
+                <option value="awards">Награды (стекло, акрил, плакетки)</option>
+            </select>
+            <strong style="margin-left: 15px; color: #d9534f;">Квант: <span id="kvantCostOut">0</span> ₸</strong>
+        </span>
+        
+        <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="addDeliveryCost" checked> 
+                Включить доставку от поставщика в "Расходы нал" (VIPLINE: 4000 тг / Эксклюзив, Квант: 3000 тг)
+            </label>
+        </div>
+    </div>
+
+    <table>
+        <tbody>
+            <!-- Строка для режима Склад (Алматы) -->
+            <tr id="sklad-product-row" style="display: none;">
+                <td>Товар</td>
+                <td>
+                    <select name="product">
+                        <option value="2615;1255">бутылка Tonic</option>
+                        <option value="3450;2584">ежедневник Hamilton</option>
+                        <option value="2300;1649">ежедневник Simply</option>
+                        <option value="3070;1362">кружка Yasna</option>
+                        <option value="450;231">ручка Factor</option>
+                        <option value="570;422">ручка Factor Touch</option>
+                        <option value="590;450">ручка Factor Black</option>
+                        <option value="230;104">ручка N16</option>
+                        <option value="195;94">ручка Plane</option>
+                        <option value="180;88">ручка Navi</option>
+                        <option value="1600;1138">сумка Carryme</option>
+                        <option value="7520;3610">термокружка Kick</option>
+                        <option value="4800;3524">термос Stripe</option>
+                        <option value="4800;3535">магнитный антистресс Everie</option>
+                        <option value="6000;4324">Ланчбокс Yummybox</option>
+                        <option value="3705;2144">Бейсболка Washington</option>
+                    </select>
+                </td>
+                <td></td>
+                <td>НДС</td>
+                <td>
+                    <input id="skladWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
+                    <input id="skladWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
+                </td>
+                <td></td>
+                <td>Курс</td>
+                <td><input name="PB2" value="7" type="text">₽/₸</td>
+            </tr>
+
+            <!-- Строка для режима Основной заказ -->
+            <tr id="order-country-row">
+                <td>Страна происхождения товара</td>
+                <td>
+                    <label for="kazakhstan"><img src="https://flagcdn.com/w40/kz.png" alt="Флаг Казахстана" width="40"></label>
+                    <input id="kazakhstan" name="origin" value="kazakhstan" checked="checked" type="radio">
+                    <label for="russia"><img src="https://flagcdn.com/w40/ru.png" alt="Флаг России" width="40"></label>
+                    <input id="russia" name="origin" value="russia" type="radio">
+                </td>
+                <td></td>
+                <td>НДС</td>
+                <td>
+                    <input id="orderWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
+                    <input id="orderWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
+                </td>
+                <td></td>
+                <td>Курс</td>
+                <td><input name="PB2" value="7" type="text">₽/₸ </td>
+            </tr>
+
+            <tr>
+                <td>Цены в долларах</td>
+                <td>
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="showUsd" name="showUsd"> Включить USD ($)
+                    </label>
+                </td>
+                <td></td>
+                <td><span class="usd-rate-label" style="display: none;">Курс доллара</span></td>
+                <td>
+                    <span id="usd-rate-wrap" style="display: none;">
+                        <input name="usdRate" id="usdRate" value="480" type="number" step="0.5" style="width: 55px;"> ₸
+                    </span>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <tr id="unit-price-row">
+                <td>Цена за единицу</td>
+                <td><input name="C3" value="0" type="text"><span id="currency-symbol">₸</span> </td>
+                <td></td>
+                <td>Расходы с НДС</td>
+                <td><input name="F3" value="0" type="text">₸ </td>
+                <td></td>
+                <td>Накрутка</td>
+                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25; макс=9)</td>
+            </tr>
+
+            <!-- Для режима Склад вместо строки выше будет компактный ряд -->
+            <tr id="sklad-vat-expenses-row" style="display: none;">
+                <td>Тираж</td>
+                <td><input name="C5" value="1" type="text">шт.</td>
+                <td></td>
+                <td>Расходы с НДС</td>
+                <td><input name="F3" value="0" type="text">₸ </td>
+                <td></td>
+                <td>Накрутка</td>
+                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин = 1.25; макс = 9)</td>
+            </tr>
+
+            <tr id="order-discount-row">
+                <td></td><td></td><td></td>
+                <td>Расходы без НДС</td>
+                <td><input name="F4" value="0" type="text">₸ </td>
+                <td></td>
+                <td>Доп. скидка</td>
+                <td><input name="addDiscount" value="0" type="text">%</td>
+            </tr>
+
+            <tr id="sklad-cliche-row" style="display: none;">
+                <td align="left">Приладка</td>
+                <td><input name="C6" value="0" type="text">шт.</td>
+                <td></td>
+                <td>Расходы без НДС</td>
+                <td><input name="F4" value="0" type="text">₸ </td>
+            </tr>
+
+            <tr id="order-quantity-row">
+                <td>Тираж</td>
+                <td><input name="C5" value="1" type="text">шт. </td>
+                <td></td>
+                <td>Расходы нал</td>
+                <td><input name="F5" value="0" type="text">₸ </td>
+            </tr>
+
+            <tr id="order-cliche-row">
+                <td align="left">Приладка</td>
+                <td><input name="C6" value="0" type="text">шт. </td>
+                <td></td><td></td><td></td>
+            </tr>
+
+            <tr id="sklad-cash-row" style="display: none;">
+                <td></td><td></td><td></td>
+                <td>Расходы нал</td>
+                <td><input name="F5" value="0" type="text">₸ </td>
+            </tr>
+
+            <tr class="order-overtime">
+                <td></td><td></td><td></td>
+                <td>Сверхурочная печатников</td>
+                <td><input class="small-input" name="F6" value="0" type="number">часы </td>
+            </tr>
+            <tr class="order-overtime">
+                <td></td><td></td><td></td>
+                <td>Сверхурочная переплет</td>
+                <td><input class="small-input" name="F7" value="0" type="number">часы </td>
+            </tr>
+
+            <tr>
+                <td>Продажная цена за единицу</td>
+                <td><input name="C8" value="0" type="text">₸</td>
+            </tr>
+            <tr class="usd-row" style="display: none; color: #1e7e34;">
+                <td>Продажная цена за ед. ($)</td>
+                <td><input name="usdUnit" value="$ 0" type="text" readonly style="color: #1e7e34; font-weight: bold;"></td>
+            </tr>
+
+            <tr>
+                <td>Цена за тираж</td>
+                <td><input name="C9" value="0" type="text">₸</td>
+                <td></td>
+                <td>Расход за тираж</td>
+                <td><input name="F9" value="0" type="text">₸</td>
+            </tr>
+            <tr class="usd-row" style="display: none; color: #1e7e34;">
+                <td>Цена за тираж ($)</td>
+                <td><input name="usdTotal" value="$ 0" type="text" readonly style="color: #1e7e34; font-weight: bold;"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="bottom-right" id="cashback-block">
+        <span>Хочет получить </span>
+        <span><input name="K1" value="0" type="text" onchange="calc()">₸</span><br><br>
+        <span>Хочет добавить </span>
+        <span><input name="K3" value="0" type="text" onchange="calc()">₸</span>
+    </div>
 
 <script type="text/javascript">
+var currentMode = 'order'; // 'order' или 'sklad'
+
 $(document).ready(function() {
+    // Переключение Заказ / Алматы
+    $('#btn-order').click(function() {
+        currentMode = 'order';
+        $('#btn-order').addClass('active');
+        $('#btn-sklad').removeClass('active');
+        
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').hide();
+        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime, #cashback-block').show();
+        calc();
+    });
+
+    $('#btn-sklad').click(function() {
+        currentMode = 'sklad';
+        $('#btn-sklad').addClass('active');
+        $('#btn-order').removeClass('active');
+        
+        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime, #cashback-block').hide();
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').show();
+        calc();
+    });
+
     function updateViplineItemTypes() {
         let pType = $('#printType').val();
         let $itemType = $('#itemType');
         $itemType.empty();
+        
         if (typeof viplineOptionsMap !== 'undefined' && viplineOptionsMap[pType]) {
             viplineOptionsMap[pType].forEach(opt => $itemType.append(new Option(opt.text, opt.val)));
         }
@@ -237,7 +341,7 @@ $(document).ready(function() {
     });
 
     $('#printType').change(() => { updateViplineItemTypes(); calc(); });
-    $('#itemType, #colors, #kvantType, #addDeliveryCost').change(() => calc());
+    $('#itemType, #colors, #kvantType, #addDeliveryCost, select[name="product"]').change(() => calc());
     
     $('#addDtfPoint').click(function() {
         $('#dtf-points').append(`
@@ -252,14 +356,13 @@ $(document).ready(function() {
         $(this).closest('.dtf-point').remove();
         calc();
     });
-    $(document).on('input', '.dtf-w, .dtf-h', function() {
-        calc();
-    });
-    
+    $(document).on('input', '.dtf-w, .dtf-h', () => calc());
+
     $('#exType').change(function() {
         ($(this).val() === 'bags') ? $('#cliche-wrap').hide() : $('#cliche-wrap').show();
         calc();
     });
+    
     $('#clicheExists').change(function() {
         if($(this).is(':checked')) {
             $('#cliche-area-wrap').css('opacity', '0.4').find('input').prop('disabled', true);
@@ -271,31 +374,37 @@ $(document).ready(function() {
     $('#clicheW, #clicheH').on('input', () => calc());
 
     updateViplineItemTypes();
-    $('input, select').on('change keyup', () => calc());
+    $('input, select').on('input change keyup', () => calc());
     calc();
 });
 
+var T = {};
+var F = {};
+var R = {};
+
 function calc() {
-    var T = {}; var F = {}; var R = {};
-
-    var productInfo = $('select[name="product"]').val().split(';');
-    var sellingPrice = Number(productInfo[0]);   
-    var purchasePrice = Number(productInfo[1]);  
-
-    T.C5 = Number($('input[name="C5"]').val()) || 1;  
-    T.C6 = Number($('input[name="C6"]').val()) || 0;  
-    T.F3 = Number($('input[name="F3"]').val()) || 0;  
-    T.F4 = Number($('input[name="F4"]').val()) || 0;  
-    T.F5 = Number($('input[name="F5"]').val()) || 0;  
+    T.F6 = Number($('input[name="F6"]').val()) || 0; 
+    T.F7 = Number($('input[name="F7"]').val()) || 0; 
+    T.K1 = Number($('input[name="K1"]').val()) || 0; 
+    T.K3 = Number($('input[name="K3"]').val()) || 0; 
     T.PB2 = Number($('input[name="PB2"]').val()) || 7; 
+    
+    ['C3', 'C5', 'C6', 'F3', 'F4', 'F5'].forEach(function(el) {
+        let visibleInput = $('tr:visible input[name="' + el + '"]');
+        if (visibleInput.length) {
+            T[el] = Number(visibleInput.val()) || 0;
+        } else {
+            T[el] = Number($('input[name="' + el + '"]').val()) || 0;
+        }
+    });
 
     let quantity = T.C5 || 1; 
     let supplier = $('#supplier').val();
-    let applyDelivery = $('#addDeliveryCost').is(':checked'); 
+    let applyDelivery = $('#addDeliveryCost').is(':checked');
 
     let supplierCostWithoutVat = 0; 
-    let supplierCostWithVat = 0;    
-    let autoCashExpense = 0;        
+    let supplierCostWithVat = 0;   
+    let autoCashExpense = 0;       
 
     if (supplier === 'vipline' && typeof calculateVipline === 'function') {
         let cost = calculateVipline(quantity);
@@ -307,7 +416,7 @@ function calc() {
         let cost = calculateExclusive(quantity);
         $('#exclusiveCostOut').text(cost.toLocaleString('ru-RU'));
         supplierCostWithVat += cost; 
-        if (applyDelivery) autoCashExpense = 3000;     
+        if (applyDelivery) autoCashExpense = 3000; 
     }
     else if (supplier === 'kvant' && typeof calculateKvant === 'function') {
         let cost = calculateKvant(quantity);
@@ -320,33 +429,108 @@ function calc() {
     T.F3 += supplierCostWithVat;
     T.F5 += autoCashExpense; 
 
-    var markup = Math.max(Number($('input[name="markup"]').val()) || 1.35, 1.25);
-    markup = Math.min(markup, 9);
-    var vat = $('input[name="vat"]:checked').val() || 'withVAT';
-
+    var markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;   
+    markup = Math.max(markup, 1.25);                        
+    markup = Math.min(markup, 9);                                   
+        
+    var origin = $('input[name="origin"]:checked').val() || 'kazakhstan';
+    var vat = $('tr:visible input[name="vat"]:checked').val() || 'withVAT';
+    
+    if (origin === 'kazakhstan') {
+        $('#currency-symbol').text('₸');
+    } else if (origin === 'russia') {
+        $('#currency-symbol').text('₽');
+    }
+    
+    if ($('input[name="K1"]').is(':focus')) { T.K3 = Math.round(T.K1 * 1.7052); }
+    if ($('input[name="K3"]').is(':focus')) { T.K1 = Math.round(T.K3 / 1.7052); }
+    
+    var addDiscount = Number($('input[name="addDiscount"]').val()) || 0; 
+    addDiscount = Math.max(0, Math.min(addDiscount, 90)); 
+    var addDiscountK = 1 - addDiscount / 100;                 
+    
     F.F3 = T.F3 * markup;                                       
     F.markup = markup * 1.16;                                    
     F.F4 = T.F4 * F.markup;                                      
     F.F5 = T.F5 * markup;                                        
     R.F4 = T.F4 + (F.F4 * 16 / 116);                             
-
-    T.PB4 = T.C5 + T.C6;                      
-    T.PB3 = purchasePrice;
-    T.PB5 = sellingPrice * T.PB4;             
-    T.PB8 = T.PB3 * T.PB4;                    
-
-    T.PB11 = T.F3 + R.F4 + T.F5;                 
-    T.PB13 = F.F3 + F.F4 + F.F5;                 
+    T.PB20 = T.F6 * 4000;                                        
+    T.PB21 = T.F7 * 1800;                                        
+    T.PB22 = T.PB20 + T.PB21;                                    
+    F.PB22 = T.PB22 * markup;                                        
     
-    T.PB14 = T.PB5 + T.PB13;                    
+    if (currentMode === 'order') {
+        if (origin == 'kazakhstan') {
+            if (vat == 'withVAT') {
+                T.PB4 = T.C5 + T.C6;                                                
+                T.PB5 = (T.C3 * T.PB4) * addDiscountK;                              
+                T.PB12 = T.PB5 * markup;                                                         
+                T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                         
+                T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;                                     
+                T.PB14 = T.PB12 + T.PB13;                                                        
+                T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                                   
+                T.C9 = T.C8 * T.C5;                                                 
+                T.F9 = Math.round(T.PB5 + T.PB11);                                              
+                T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));            
+                T.K4 = Math.round(T.F9 + T.K3);                                 
+            }
+            if (vat == 'withoutVAT') {
+                T.PB4 = T.C5 + T.C6;                                                
+                T.PB5 = (T.C3 * T.PB4) * addDiscountK;                              
+                T.PB12 = T.PB5 * F.markup;                                           
+                R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                     
+                T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                         
+                T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;             
+                T.PB14 = T.PB12 + T.PB13;                                
+                T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                                   
+                T.C9 = T.C8 * T.C5;                                                 
+                T.F9 = Math.round(R.PB5 + T.PB11);                                              
+                T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));            
+                T.K4 = Math.round(T.F9 + T.K3);                                 
+            }
+        }
         
-    T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;         
-    T.C9 = T.C8 * T.C5;                       
-    T.F9 = Math.round(T.PB8 + T.PB11);        
+        if (origin == 'russia') {
+            T.PB3 = T.PB2 * T.C3;                                           
+            T.PB4 = T.C5 + T.C6;                                            
+            T.PB5 = (T.PB3 * T.PB4) * addDiscountK;                        
+            T.PB12 = T.PB5 * F.markup;                                       
+            R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                                     
+            T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                     
+            T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;                             
+            T.PB14 = T.PB12 + T.PB13;                                                
+            T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                               
+            T.C9 = T.C8 * T.C5;                                             
+            T.F9 = Math.round(R.PB5 + T.PB11);                                      
+            T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));        
+            T.K4 = Math.round(T.F9 + T.K3);                             
+        }
 
-    $('input[name="C8"]').val(T.C8);  
-    $('input[name="F9"]').val(T.F9);  
-    $('input[name="C9"]').val(T.C9);  
+        $('input[name="K1"]').val(T.K1.toFixed(2)); 
+        $('input[name="K3"]').val(T.K3.toFixed(2)); 
+    } else {
+        // Режим Склад (Алматы)
+        var productInfo = $('select[name="product"]').val().split(';');
+        var sellingPrice = Number(productInfo[0]);   
+        var purchasePrice = Number(productInfo[1]);  
+
+        T.PB4 = T.C5 + T.C6;                      
+        T.PB3 = purchasePrice;
+        T.PB5 = sellingPrice * T.PB4;             
+        T.PB8 = T.PB3 * T.PB4;                    
+
+        T.PB11 = T.F3 + R.F4 + T.F5;                 
+        T.PB13 = F.F3 + F.F4 + F.F5;                 
+        T.PB14 = T.PB5 + T.PB13;                    
+            
+        T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;         
+        T.C9 = T.C8 * T.C5;                       
+        T.F9 = Math.round(T.PB8 + T.PB11);
+    }
+
+    ['C8', 'C9', 'F9', 'K2', 'K4'].forEach(function(el) {
+        $('input[name="' + el + '"]').val(T[el] || 0);
+    });
 
     var showUsd = $('#showUsd').is(':checked');
     var usdRate = Number($('#usdRate').val()) || 1;
