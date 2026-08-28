@@ -8,6 +8,7 @@
     <script src="vipline.js"></script>
     <script src="exclusive.js"></script>
     <script src="kvant.js"></script>
+    <script src="kitchen.js"></script>
 
     <style type="text/css">
         input { text-align: right; margin-right: 6px; }
@@ -44,7 +45,7 @@
     <div class="supplier-panel">
         <strong>Нанесение:</strong>
         <div class="search-box-wrap">
-            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение)..." autocomplete="off">
+            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение, чехлы)..." autocomplete="off">
             <div id="searchResults" class="search-results"></div>
         </div>
 
@@ -258,8 +259,15 @@
 var currentMode = 'order'; 
 var activeService = null; 
 
-// Каталог услуг для автопоиска
+// Полный каталог услуг всех поставщиков
 const servicesCatalog = [
+    // --- KITCHEN: УФ-ПЕЧАТЬ (с НДС) ---
+    { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
+    { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
+    { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
+    { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
+    { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов kitchen китчен', name: 'УФ: Чехлы для смартфонов [Kitchen]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
+
     // --- КВАНТ: ГРАВИРОВКА (с НДС) ---
     { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
     { id: 'kv_pens_plastic', supplier: 'kvant', vat: true, keywords: 'гравировка ручки пластик квант', name: 'Гравировка: Ручки (Пластик) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_plastic, q) },
@@ -306,7 +314,7 @@ function getTierPrice(tiers, q) {
     if (!tiers) return 0;
     let tier = tiers.find(t => q <= t.max);
     if (!tier) return 0;
-    return (q === 1) ? tier.price : tier.price * q;
+    return (q === 1 && tier.price >= 1000 && !tiers[0].price) ? tier.price : tier.price * q;
 }
 
 function getViplineDirect(pType, iType, q, colors) {
@@ -375,7 +383,7 @@ $(document).ready(function() {
         calc();
     });
 
-    // Обработчик строки поиска
+    // Обработчик умного поиска
     $('#serviceSearch').on('input focus', function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
@@ -492,7 +500,7 @@ function calc() {
 
     let quantity = T.C5 || 1; 
 
-    // Расчет нанесения из умного поиска
+    // Расчет нанесения из каталога
     let supplierCostWithoutVat = 0; 
     let supplierCostWithVat = 0;   
     let autoCashExpense = 0;       
