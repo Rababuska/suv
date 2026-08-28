@@ -16,13 +16,23 @@
         .gray td input, .gray td input:focus, .gray td input:active { color: gray; border-color: gray; cursor: default; border: none; outline: none !important; }
         .bottom-right { position: fixed; bottom: 10px; right: 10px; color: lightgray; font-size: 14px; }
         .small-input { width: 30px; }
-        .supplier-panel { margin: 15px 0; padding: 10px 15px; background-color: #f0f8ff; border: 1px solid #cce5ff; border-radius: 5px; display: inline-block; font-family: Arial, sans-serif; font-size: 14px; vertical-align: top;}
-        .supplier-panel select { margin-right: 10px; padding: 3px; }
-        .supplier-details { border-left: 1px solid #ccc; padding-left: 10px; margin-left: 5px; display: inline-block; vertical-align: top;}
+        .supplier-panel { margin: 15px 0; padding: 12px 15px; background-color: #f0f8ff; border: 1px solid #cce5ff; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; position: relative; }
         .mm-input { width: 45px; padding: 2px; text-align: center; }
-        .delivery-checkbox { margin-top: 12px; font-size: 13px; color: #444; border-top: 1px dashed #ccc; padding-top: 8px; }
-        .menu button { cursor: pointer; padding: 3px 10px; }
+        .delivery-checkbox { margin-top: 10px; font-size: 13px; color: #444; border-top: 1px dashed #ccc; padding-top: 8px; }
+        .menu button { cursor: pointer; padding: 4px 12px; font-weight: normal; }
         .menu button.active { font-weight: bold; background-color: #d0e4ff; border-color: #0066cc; }
+        
+        /* Стили умного поиска */
+        .search-box-wrap { display: inline-block; position: relative; width: 460px; }
+        .search-input { width: 100%; padding: 5px 8px; text-align: left; font-size: 13px; box-sizing: border-box; }
+        .search-results { 
+            position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #999; 
+            max-height: 250px; overflow-y: auto; z-index: 9999; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+        }
+        .search-item { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #eee; text-align: left; font-size: 12px; }
+        .search-item:hover, .search-item.selected { background-color: #007bff; color: #fff; }
+        .search-item .item-cost { font-weight: bold; float: right; margin-left: 10px; }
+        .selected-badge { display: inline-block; margin-left: 10px; padding: 3px 8px; background: #28a745; color: #fff; border-radius: 3px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -31,88 +41,42 @@
         <button type="button" id="btn-sklad">АЛМАТЫ</button>
     </div>
 
+    <!-- УМНЫЙ ПОИСК ПОСТАВЩИКОВ -->
     <div class="supplier-panel">
-        <strong>Поставщик:</strong>
-        <select name="supplier" id="supplier">
-            <option value="none">Свой расчет / Другой</option>
-            <option value="vipline">VIPLINE (без НДС)</option>
-            <option value="exclusive">Эксклюзив (с НДС)</option>
-            <option value="kvant">Квант - Гравировка (с НДС)</option>
-        </select>
-        
-        <span id="vipline-settings" class="supplier-details" style="display: none;">
-            <div>
-                <select name="printType" id="printType">
-                    <option value="uv">УФ печать</option>
-                    <option value="silkscreen">Шелкография</option>
-                    <option value="dtf">ДТФ (классика, лого до 10см)</option>
-                    <option value="dtf_area">ДТФ (расчет по площади)</option>
-                </select>
-                <select name="itemType" id="itemType"></select>
-                <span id="colors-wrap" style="display: none;">
-                    <select name="colors" id="colors">
-                        <option value="colors_1">1 цвет</option>
-                        <option value="colors_2">2 цвета</option>
-                    </select>
-                </span>
-                <strong style="margin-left: 15px; color: #d9534f;">VIPLINE: <span id="viplineCostOut">0</span> ₸</strong>
-            </div>
-            
-            <div id="dtf-area-wrap" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc;">
-                <div id="dtf-points">
-                    <div class="dtf-point">
-                        <input type="number" class="mm-input dtf-w" placeholder="Ш(мм)" min="0"> x 
-                        <input type="number" class="mm-input dtf-h" placeholder="В(мм)" min="0">
-                        <button type="button" class="remove-dtf-point" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold;">✖</button>
-                    </div>
-                </div>
-                <button type="button" id="addDtfPoint" style="font-size: 11px; margin-top: 5px; cursor: pointer;">+ Добавить точку нанесения</button>
-            </div>
-        </span>
+        <strong>Нанесение:</strong>
+        <div class="search-box-wrap">
+            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (например: ручки, УФ, гравировка, тиснение)..." autocomplete="off">
+            <div id="searchResults" class="search-results"></div>
+        </div>
 
-        <span id="exclusive-settings" class="supplier-details" style="display: none;">
-            <select name="exType" id="exType">
-                <option value="emboss_notebook">Тиснение на блокноты</option>
-                <option value="emboss_sheet">Тиснение на листовую</option>
-                <option value="bags">Высечка и сборка пакетов</option>
-                <option value="die_cutting">Просто высечка (без пакетов)</option>
-            </select>
-            
-            <span id="cliche-wrap" style="margin-left: 10px;">
-                <label style="cursor: pointer; margin-right: 10px;">
-                    <input type="checkbox" id="clicheExists"> Клише есть
-                </label>
-                <span id="cliche-area-wrap">
-                    Размер (мм): 
-                    <input type="number" id="clicheW" class="mm-input" value="0" min="0" placeholder="Ш"> x 
-                    <input type="number" id="clicheH" class="mm-input" value="0" min="0" placeholder="В">
-                    <span id="clicheAreaOut" style="color: #888; font-size: 12px; margin-left: 5px;">(0 см²)</span>
+        <button type="button" id="clearService" style="padding: 3px 8px; font-size: 12px; cursor: pointer; display: none;">Сбросить</button>
+        <span id="selectedServiceBadge" class="selected-badge" style="display: none;"></span>
+
+        <!-- Дополнительные параметры для ДТФ площади и Клише -->
+        <div id="extraParamsWrap" style="display: none; margin-top: 10px; padding: 8px; background: #fff; border: 1px solid #ddd;">
+            <span id="clicheParams" style="display: none;">
+                <label style="cursor: pointer; margin-right: 10px;"><input type="checkbox" id="clicheExists"> Клише есть</label>
+                <span id="clicheAreaBlock">
+                    Размер клише (мм): <input type="number" id="clicheW" class="mm-input" value="50" min="0"> x <input type="number" id="clicheH" class="mm-input" value="50" min="0">
+                    <span id="clicheAreaOut" style="color: #888; font-size: 12px;">(25 см²)</span>
                 </span>
             </span>
-            <strong style="margin-left: 15px; color: #d9534f;">Эксклюзив: <span id="exclusiveCostOut">0</span> ₸</strong>
-        </span>
 
-        <span id="kvant-settings" class="supplier-details" style="display: none;">
-            <select name="kvantType" id="kvantType">
-                <option value="circular_30">Кружки, термосы, бутылки (до 30 см²)</option>
-                <option value="circular_100">Кружки, термосы, бутылки (до 100 см²)</option>
-                <option value="pens_metal">Ручки: Металл</option>
-                <option value="pens_plastic">Ручки: Пластик</option>
-                <option value="pens_glossy">Ручки: Глянцевые / лакированные</option>
-                <option value="powerbanks">Сувенирные изделия (Повербанки)</option>
-                <option value="flash_drives">Флешки</option>
-                <option value="keychains">Брелоки, зажигалки, визитницы</option>
-                <option value="backpacks_plate">Рюкзаки и сумки (на шильду)</option>
-                <option value="backpacks_body">Рюкзаки и сумки (на ткань / кожу)</option>
-                <option value="awards">Награды (стекло, акрил, плакетки)</option>
-            </select>
-            <strong style="margin-left: 15px; color: #d9534f;">Квант: <span id="kvantCostOut">0</span> ₸</strong>
-        </span>
+            <span id="dtfParams" style="display: none;">
+                Точки ДТФ (мм): 
+                <span id="dtf-points">
+                    <span class="dtf-point">
+                        <input type="number" class="mm-input dtf-w" value="100" min="0"> x <input type="number" class="mm-input dtf-h" value="100" min="0">
+                    </span>
+                </span>
+                <button type="button" id="addDtfPoint" style="font-size: 11px; cursor: pointer;">+ точка</button>
+            </span>
+        </div>
         
         <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="addDeliveryCost" checked> 
-                Включить доставку от поставщика в "Расходы нал" (VIPLINE: 4000 тг / Эксклюзив, Квант: 3000 тг)
+                Включить доставку от поставщика в "Расходы нал" (<span id="deliveryAmountText">3 000</span> ₸)
             </label>
         </div>
     </div>
@@ -203,7 +167,7 @@
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25; макс=9)</td>
             </tr>
 
-            <!-- Для режима Склад вместо строки выше будет компактный ряд -->
+            <!-- Складской компактный ряд -->
             <tr id="sklad-vat-expenses-row" style="display: none;">
                 <td>Тираж</td>
                 <td><input name="C5" value="1" type="text">шт.</td>
@@ -286,6 +250,7 @@
         </tbody>
     </table>
 
+    <!-- БЛОК КЭШБЕКА (АКТИВЕН И ДЛЯ ЗАКАЗА, И ДЛЯ СКЛАДА) -->
     <div class="bottom-right" id="cashback-block">
         <span>Хочет получить </span>
         <span><input name="K1" value="0" type="text" onchange="calc()">₸</span><br><br>
@@ -294,17 +259,100 @@
     </div>
 
 <script type="text/javascript">
-var currentMode = 'order'; // 'order' или 'sklad'
+var currentMode = 'order'; 
+var activeService = null; 
+
+// Реестр всех доступных услуг по всем поставщикам
+const servicesCatalog = [
+    // КВАНТ (Гравировка, с НДС)
+    { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
+    { id: 'kv_pens_plastic', supplier: 'kvant', vat: true, keywords: 'гравировка ручки пластик квант', name: 'Гравировка: Ручки (Пластик) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_plastic, q) },
+    { id: 'kv_pens_glossy', supplier: 'kvant', vat: true, keywords: 'гравировка ручки глянец лак квант', name: 'Гравировка: Ручки (Глянцевые/лак) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_glossy, q) },
+    { id: 'kv_circular_30', supplier: 'kvant', vat: true, keywords: 'гравировка кружки термосы бутылки 30см квант окружность', name: 'Гравировка: Кружки/термосы до 30см² [Квант]', fn: (q) => getTierPrice(kvantPrices.circular_30, q) },
+    { id: 'kv_circular_100', supplier: 'kvant', vat: true, keywords: 'гравировка кружки термосы бутылки 100см квант окружность', name: 'Гравировка: Кружки/термосы до 100см² [Квант]', fn: (q) => getTierPrice(kvantPrices.circular_100, q) },
+    { id: 'kv_powerbanks', supplier: 'kvant', vat: true, keywords: 'гравировка повербанки powerbank квант сувениры', name: 'Гравировка: Повербанки / сувениры [Квант]', fn: (q) => getTierPrice(kvantPrices.powerbanks, q) },
+    { id: 'kv_flash', supplier: 'kvant', vat: true, keywords: 'гравировка флешки квант', name: 'Гравировка: Флешки [Квант]', fn: (q) => getTierPrice(kvantPrices.flash_drives, q) },
+    { id: 'kv_keychains', supplier: 'kvant', vat: true, keywords: 'гравировка брелоки зажигалки визитницы квант', name: 'Гравировка: Брелоки / зажигалки / визитницы [Квант]', fn: (q) => getTierPrice(kvantPrices.keychains, q) },
+    { id: 'kv_awards', supplier: 'kvant', vat: true, keywords: 'гравировка награды стекло акрил плакетки медали квант', name: 'Гравировка: Награды / плакетки [Квант]', fn: (q) => getTierPrice(kvantPrices.awards, q) },
+
+    // VIPLINE (без НДС)
+    { id: 'vip_uv_pens', supplier: 'vipline', vat: false, keywords: 'уф печать ручки зажигалки брелоки флешки виплайн vipline', name: 'УФ: Ручки, зажигалки, брелоки, флешки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'pens', q) },
+    { id: 'vip_uv_mugs', supplier: 'vipline', vat: false, keywords: 'уф печать кружки термосы бутылки плоские виплайн vipline', name: 'УФ: Кружки, термосы, бутылки (плоские) [VIPLINE]', fn: (q) => getViplineDirect('uv', 'mugs', q) },
+    { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники powerbank повербанки vipline', name: 'УФ: Ежедневники, блокноты, повербанки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'notebooks', q) },
+    { id: 'vip_silk_tshirt_1', supplier: 'vipline', vat: false, keywords: 'шелкография футболки 1 цвет виплайн vipline текстиль', name: 'Шелкография: Футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'tshirt_light', q, 'colors_1') },
+    { id: 'vip_silk_tshirt_2', supplier: 'vipline', vat: false, keywords: 'шелкография футболки 2 цвета виплайн vipline текстиль', name: 'Шелкография: Футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'tshirt_light', q, 'colors_2') },
+    { id: 'vip_dtf_caps', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf бейсболки кепки виплайн vipline', name: 'ДТФ: Бейсболки (стандарт) [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'caps', q) },
+    { id: 'vip_dtf_shirts', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf футболки текстиль виплайн vipline', name: 'ДТФ: Футболки до 10 см [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'shirts_small', q) },
+    { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q) => calcDtfArea(q) },
+
+    // ЭКСКЛЮЗИВ (с НДС)
+    { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calcExclusiveTiers('emboss_notebook', q) },
+    { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calcExclusiveTiers('emboss_sheet', q) },
+    { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calcExclusiveTiers('bags', q) },
+    { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q) => calcExclusiveTiers('die_cutting', q) }
+];
+
+function getTierPrice(tiers, q) {
+    if (!tiers) return 0;
+    let tier = tiers.find(t => q <= t.max);
+    if (!tier) return 0;
+    return (q === 1) ? tier.price : tier.price * q;
+}
+
+function getViplineDirect(pType, iType, q, colors) {
+    if (typeof viplinePrices === 'undefined') return 0;
+    let tiers = (pType === 'uv' || pType === 'dtf') ? viplinePrices[pType]?.[iType] : viplinePrices[pType]?.[iType]?.[colors];
+    if (!tiers) return 0;
+    let tier = tiers.find(t => q <= t.max);
+    if (!tier) return 0;
+    let cost = tier.type === 'total' ? tier.price : tier.price * q;
+    if (tiers[0].type === 'total' && cost < tiers[0].price) cost = tiers[0].price;
+    return cost;
+}
+
+function calcDtfArea(q) {
+    let singleCost = 0;
+    $('.dtf-point').each(function() {
+        let w = Number($(this).find('.dtf-w').val()) || 0;
+        let h = Number($(this).find('.dtf-h').val()) || 0;
+        if (w > 0 && h > 0) {
+            let area = (w / 10) * (h / 10);
+            let p = area * 4 + 100;
+            if (p < 450) p = 450;
+            singleCost += p;
+        }
+    });
+    return Math.round(singleCost * q);
+}
+
+function calcExclusiveTiers(type, q) {
+    if (typeof exclusivePrices === 'undefined') return 0;
+    let data = exclusivePrices[type];
+    if (!data) return 0;
+    let tier = data.tiers.find(t => q <= t.max);
+    let runCost = tier ? (tier.type === 'total' ? tier.price : tier.price * q) : 0;
+    let extraCost = 0;
+    if ((type === 'emboss_notebook' || type === 'emboss_sheet') && !$('#clicheExists').is(':checked')) {
+        let w = Number($('#clicheW').val()) || 0;
+        let h = Number($('#clicheH').val()) || 0;
+        if (w > 0 && h > 0) {
+            let area = ((w + 10) / 10) * ((h + 10) / 10);
+            extraCost = Math.max(3500, Math.round(area * 250));
+        } else {
+            extraCost = 3500;
+        }
+    }
+    return runCost + extraCost;
+}
 
 $(document).ready(function() {
-    // Переключение Заказ / Алматы
+    // Переключение режимов
     $('#btn-order').click(function() {
         currentMode = 'order';
         $('#btn-order').addClass('active');
         $('#btn-sklad').removeClass('active');
-        
         $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').hide();
-        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime, #cashback-block').show();
+        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
         calc();
     });
 
@@ -312,68 +360,108 @@ $(document).ready(function() {
         currentMode = 'sklad';
         $('#btn-sklad').addClass('active');
         $('#btn-order').removeClass('active');
-        
-        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime, #cashback-block').hide();
+        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
         $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').show();
         calc();
     });
 
-    function updateViplineItemTypes() {
-        let pType = $('#printType').val();
-        let $itemType = $('#itemType');
-        $itemType.empty();
-        
-        if (typeof viplineOptionsMap !== 'undefined' && viplineOptionsMap[pType]) {
-            viplineOptionsMap[pType].forEach(opt => $itemType.append(new Option(opt.text, opt.val)));
-        }
-        (pType === 'silkscreen') ? $('#colors-wrap').show() : $('#colors-wrap').hide();
-        (pType === 'dtf_area') ? $('#dtf-area-wrap').show() : $('#dtf-area-wrap').hide();
-    }
+    // Умный поиск нанесений
+    $('#serviceSearch').on('input focus', function() {
+        let q = Number($('input[name="C5"]:visible').val()) || 1;
+        let query = $(this).val().toLowerCase().trim();
+        let $res = $('#searchResults');
+        $res.empty();
 
-    $('#supplier').change(function() {
-        let val = $(this).val();
-        $('#vipline-settings, #exclusive-settings, #kvant-settings, #delivery-wrap').hide();
-        
-        if (val === 'vipline') { $('#vipline-settings').fadeIn(200); $('#delivery-wrap').fadeIn(200); }
-        if (val === 'exclusive') { $('#exclusive-settings').fadeIn(200); $('#delivery-wrap').fadeIn(200); }
-        if (val === 'kvant') { $('#kvant-settings').fadeIn(200); $('#delivery-wrap').fadeIn(200); }
+        if (query.length === 0) {
+            $res.hide();
+            return;
+        }
+
+        let matches = servicesCatalog.filter(s => {
+            let words = query.split(' ');
+            return words.every(w => s.keywords.toLowerCase().includes(w) || s.name.toLowerCase().includes(w));
+        });
+
+        if (matches.length === 0) {
+            $res.append('<div class="search-item" style="color: #888;">Ничего не найдено</div>').show();
+            return;
+        }
+
+        matches.forEach(item => {
+            let cost = item.fn(q);
+            let taxLabel = item.vat ? 'с НДС' : 'без НДС';
+            $res.append(`
+                <div class="search-item" data-id="${item.id}">
+                    ${item.name} <span style="font-size:11px; color:#888;">(${taxLabel})</span>
+                    <span class="item-cost">${cost.toLocaleString('ru-RU')} ₸</span>
+                </div>
+            `);
+        });
+        $res.show();
+    });
+
+    $(document).on('click', '.search-item', function() {
+        let id = $(this).data('id');
+        activeService = servicesCatalog.find(s => s.id === id);
+        if (activeService) {
+            $('#serviceSearch').val(activeService.name);
+            $('#searchResults').hide();
+            $('#clearService, #delivery-wrap').show();
+            
+            // Настройка доставки
+            $('#deliveryAmountText').text(activeService.supplier === 'vipline' ? '4 000' : '3 000');
+
+            // Показ спец полей
+            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche));
+            $('#clicheParams').toggle(!!activeService.isCliche);
+            $('#dtfParams').toggle(!!activeService.isDtfArea);
+
+            calc();
+        }
+    });
+
+    $('#clearService').click(function() {
+        activeService = null;
+        $('#serviceSearch').val('');
+        $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults').hide();
         calc();
     });
 
-    $('#printType').change(() => { updateViplineItemTypes(); calc(); });
-    $('#itemType, #colors, #kvantType, #addDeliveryCost, select[name="product"]').change(() => calc());
-    
+    $(document).click(function(e) {
+        if (!$(e.target).closest('.search-box-wrap').length) {
+            $('#searchResults').hide();
+        }
+    });
+
+    // ДТФ точки
     $('#addDtfPoint').click(function() {
         $('#dtf-points').append(`
-            <div class="dtf-point" style="margin-top: 5px;">
-                <input type="number" class="mm-input dtf-w" placeholder="Ш(мм)" min="0"> x 
-                <input type="number" class="mm-input dtf-h" placeholder="В(мм)" min="0">
-                <button type="button" class="remove-dtf-point" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold;">✖</button>
-            </div>
+            <span class="dtf-point" style="margin-left: 5px;">
+                <input type="number" class="mm-input dtf-w" value="100" min="0"> x 
+                <input type="number" class="mm-input dtf-h" value="100" min="0">
+                <button type="button" class="remove-dtf-point" style="color:red; cursor:pointer; border:none; background:none;">✖</button>
+            </span>
         `);
+        calc();
     });
     $(document).on('click', '.remove-dtf-point', function() {
         $(this).closest('.dtf-point').remove();
         calc();
     });
-    $(document).on('input', '.dtf-w, .dtf-h', () => calc());
 
-    $('#exType').change(function() {
-        ($(this).val() === 'bags') ? $('#cliche-wrap').hide() : $('#cliche-wrap').show();
-        calc();
-    });
-    
+    // Клише
     $('#clicheExists').change(function() {
-        if($(this).is(':checked')) {
-            $('#cliche-area-wrap').css('opacity', '0.4').find('input').prop('disabled', true);
-        } else {
-            $('#cliche-area-wrap').css('opacity', '1').find('input').prop('disabled', false);
-        }
+        $('#clicheAreaBlock').css('opacity', $(this).is(':checked') ? '0.4' : '1');
         calc();
     });
-    $('#clicheW, #clicheH').on('input', () => calc());
+    $('#clicheW, #clicheH').on('input', function() {
+        let w = Number($('#clicheW').val()) || 0;
+        let h = Number($('#clicheH').val()) || 0;
+        let area = Math.round(((w + 10) / 10) * ((h + 10) / 10));
+        $('#clicheAreaOut').text(`(${area} см²)`);
+        calc();
+    });
 
-    updateViplineItemTypes();
     $('input, select').on('input change keyup', () => calc());
     calc();
 });
@@ -391,38 +479,27 @@ function calc() {
     
     ['C3', 'C5', 'C6', 'F3', 'F4', 'F5'].forEach(function(el) {
         let visibleInput = $('tr:visible input[name="' + el + '"]');
-        if (visibleInput.length) {
-            T[el] = Number(visibleInput.val()) || 0;
-        } else {
-            T[el] = Number($('input[name="' + el + '"]').val()) || 0;
-        }
+        T[el] = visibleInput.length ? (Number(visibleInput.val()) || 0) : (Number($('input[name="' + el + '"]').val()) || 0);
     });
 
     let quantity = T.C5 || 1; 
-    let supplier = $('#supplier').val();
-    let applyDelivery = $('#addDeliveryCost').is(':checked');
 
+    // Расчет выбранного нанесения
     let supplierCostWithoutVat = 0; 
     let supplierCostWithVat = 0;   
     let autoCashExpense = 0;       
 
-    if (supplier === 'vipline' && typeof calculateVipline === 'function') {
-        let cost = calculateVipline(quantity);
-        $('#viplineCostOut').text(cost.toLocaleString('ru-RU'));
-        supplierCostWithoutVat += cost; 
-        if (applyDelivery) autoCashExpense = 4000;
-    } 
-    else if (supplier === 'exclusive' && typeof calculateExclusive === 'function') {
-        let cost = calculateExclusive(quantity);
-        $('#exclusiveCostOut').text(cost.toLocaleString('ru-RU'));
-        supplierCostWithVat += cost; 
-        if (applyDelivery) autoCashExpense = 3000; 
-    }
-    else if (supplier === 'kvant' && typeof calculateKvant === 'function') {
-        let cost = calculateKvant(quantity);
-        $('#kvantCostOut').text(cost.toLocaleString('ru-RU'));
-        supplierCostWithVat += cost; 
-        if (applyDelivery) autoCashExpense = 3000; 
+    if (activeService) {
+        let cost = activeService.fn(quantity);
+        if (activeService.vat) {
+            supplierCostWithVat += cost;
+        } else {
+            supplierCostWithoutVat += cost;
+        }
+
+        if ($('#addDeliveryCost').is(':checked')) {
+            autoCashExpense = (activeService.supplier === 'vipline') ? 4000 : 3000;
+        }
     }
     
     T.F4 += supplierCostWithoutVat; 
@@ -442,6 +519,7 @@ function calc() {
         $('#currency-symbol').text('₽');
     }
     
+    // Синхронизация Кэшбека
     if ($('input[name="K1"]').is(':focus')) { T.K3 = Math.round(T.K1 * 1.7052); }
     if ($('input[name="K3"]').is(':focus')) { T.K1 = Math.round(T.K3 / 1.7052); }
     
@@ -505,11 +583,8 @@ function calc() {
             T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));        
             T.K4 = Math.round(T.F9 + T.K3);                             
         }
-
-        $('input[name="K1"]').val(T.K1.toFixed(2)); 
-        $('input[name="K3"]').val(T.K3.toFixed(2)); 
     } else {
-        // Режим Склад (Алматы)
+        // Режим Склад (Алматы) с полной поддержкой Кэшбека
         var productInfo = $('select[name="product"]').val().split(';');
         var sellingPrice = Number(productInfo[0]);   
         var purchasePrice = Number(productInfo[1]);  
@@ -519,14 +594,19 @@ function calc() {
         T.PB5 = sellingPrice * T.PB4;             
         T.PB8 = T.PB3 * T.PB4;                    
 
-        T.PB11 = T.F3 + R.F4 + T.F5;                 
-        T.PB13 = F.F3 + F.F4 + F.F5;                 
+        T.PB11 = T.F3 + R.F4 + T.F5 + T.K3;                 
+        T.PB13 = F.F3 + F.F4 + F.F5 + T.K3;                 
         T.PB14 = T.PB5 + T.PB13;                    
             
         T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;         
         T.C9 = T.C8 * T.C5;                       
         T.F9 = Math.round(T.PB8 + T.PB11);
+        T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));
+        T.K4 = Math.round(T.F9 + T.K3);
     }
+
+    $('input[name="K1"]').val(T.K1.toFixed(2)); 
+    $('input[name="K3"]').val(T.K3.toFixed(2)); 
 
     ['C8', 'C9', 'F9', 'K2', 'K4'].forEach(function(el) {
         $('input[name="' + el + '"]').val(T[el] || 0);
