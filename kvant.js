@@ -1,11 +1,13 @@
 // ==========================================
-// БАЗА ТАРИФОВ И ЛОГИКА КВАНТ (Гравировка, с НДС)
+// БАЗА ТАРИФОВ И ЛОГИКА КВАНТ (Гравировка + УФ-печать, с НДС)
 // ==========================================
 
 const kvantPrices = {
-    // 1. Кружки, термосы, бутылки, термокружки (округлые поверхности)
+    // ------------------------------------------
+    // ГРАВИРОВКА
+    // ------------------------------------------
     circular_30: [
-        { max: 1, price: 5000 },      // Пробник
+        { max: 1, price: 5000 },
         { max: 10, price: 1000 },
         { max: 25, price: 750 },
         { max: 50, price: 700 },
@@ -18,7 +20,7 @@ const kvantPrices = {
         { max: Infinity, price: 350 }
     ],
     circular_100: [
-        { max: 1, price: 5000 },      // Пробник
+        { max: 1, price: 5000 },
         { max: 10, price: 1500 },
         { max: 25, price: 1000 },
         { max: 50, price: 950 },
@@ -30,10 +32,8 @@ const kvantPrices = {
         { max: 1999, price: 700 },
         { max: Infinity, price: 600 }
     ],
-
-    // 2. Ручки
     pens_metal: [
-        { max: 1, price: 2000 },      // Пробник
+        { max: 1, price: 2000 },
         { max: 10, price: 500 },
         { max: 25, price: 400 },
         { max: 50, price: 300 },
@@ -46,7 +46,7 @@ const kvantPrices = {
         { max: Infinity, price: 70 }
     ],
     pens_plastic: [
-        { max: 1, price: 2500 },      // Пробник
+        { max: 1, price: 2500 },
         { max: 10, price: 600 },
         { max: 25, price: 500 },
         { max: 50, price: 400 },
@@ -59,7 +59,7 @@ const kvantPrices = {
         { max: Infinity, price: 90 }
     ],
     pens_glossy: [
-        { max: 1, price: 3000 },      // Пробник
+        { max: 1, price: 3000 },
         { max: 10, price: 700 },
         { max: 25, price: 600 },
         { max: 50, price: 500 },
@@ -71,10 +71,8 @@ const kvantPrices = {
         { max: 1999, price: 200 },
         { max: Infinity, price: 150 }
     ],
-
-    // 3. Сувенирные изделия (Повербанки)
     powerbanks: [
-        { max: 1, price: 3000 },      // Пробник
+        { max: 1, price: 3000 },
         { max: 10, price: 1000 },
         { max: 25, price: 850 },
         { max: 50, price: 800 },
@@ -86,10 +84,8 @@ const kvantPrices = {
         { max: 1999, price: 400 },
         { max: Infinity, price: 350 }
     ],
-
-    // 4. Флешки
     flash_drives: [
-        { max: 1, price: 2500 },      // Пробник
+        { max: 1, price: 2500 },
         { max: 10, price: 700 },
         { max: 25, price: 500 },
         { max: 50, price: 400 },
@@ -101,10 +97,8 @@ const kvantPrices = {
         { max: 1999, price: 130 },
         { max: Infinity, price: 100 }
     ],
-
-    // 5. Брелоки, зажигалки, визитницы
     keychains: [
-        { max: 1, price: 2000 },      // Пробник
+        { max: 1, price: 2000 },
         { max: 10, price: 600 },
         { max: 25, price: 450 },
         { max: 50, price: 350 },
@@ -116,10 +110,8 @@ const kvantPrices = {
         { max: 1999, price: 120 },
         { max: Infinity, price: 100 }
     ],
-
-    // 6. Рюкзаки и сумки
     backpacks_plate: [
-        { max: 1, price: 3000 },      // Пробник
+        { max: 1, price: 3000 },
         { max: 10, price: 1000 },
         { max: 25, price: 850 },
         { max: 50, price: 700 },
@@ -132,7 +124,7 @@ const kvantPrices = {
         { max: Infinity, price: 250 }
     ],
     backpacks_body: [
-        { max: 1, price: 4000 },      // Пробник
+        { max: 1, price: 4000 },
         { max: 10, price: 1500 },
         { max: 25, price: 1200 },
         { max: 50, price: 1000 },
@@ -144,10 +136,8 @@ const kvantPrices = {
         { max: 1999, price: 550 },
         { max: Infinity, price: 500 }
     ],
-
-    // 7. Награды (стекло, акрил, плакетки, медали)
     awards: [
-        { max: 1, price: 5000 },      // Пробник
+        { max: 1, price: 5000 },
         { max: 50, price: 3000 },
         { max: 100, price: 2500 },
         { max: 199, price: 2000 },
@@ -156,22 +146,37 @@ const kvantPrices = {
         { max: 999, price: 1000 },
         { max: 1999, price: 800 },
         { max: Infinity, price: 600 }
+    ],
+
+    // ------------------------------------------
+    // 8. УФ-ПЕЧАТЬ (КВАНТ, с НДС)
+    // ------------------------------------------
+    uv_pens: [
+        { max: 10, price: 360 },
+        { max: 30, price: 280 },
+        { max: 50, price: 240 },
+        { max: 100, price: 200 },
+        { max: 300, price: 160 },
+        { max: 500, price: 140 },
+        { max: 1000, price: 120 },
+        { max: 2000, price: 100 },
+        { max: Infinity, price: 80 }
+    ],
+    uv_notebooks: [
+        { max: 10, price: 700 },
+        { max: 25, price: 550 },
+        { max: 50, price: 450 },
+        { max: 100, price: 400 },
+        { max: 200, price: 375 },
+        { max: Infinity, price: 350 }
+    ],
+    uv_bottles: [
+        { max: 10, price: 1200 },
+        { max: 25, price: 950 },
+        { max: 50, price: 550 },
+        { max: 100, price: 450 },
+        { max: 200, price: 400 },
+        { max: 500, price: 375 },
+        { max: Infinity, price: 350 }
     ]
 };
-
-function calculateKvant(quantity) {
-    let type = $('#kvantType').val();
-    let tiers = kvantPrices[type];
-
-    if (!tiers) return 0;
-
-    let tier = tiers.find(t => quantity <= t.max);
-    if (!tier) return 0;
-
-    // Для 1 шт берется фикс пробника, для тиража > 1 перемножается на тираж
-    if (quantity === 1) {
-        return tier.price;
-    }
-
-    return tier.price * quantity;
-}
