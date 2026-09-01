@@ -34,7 +34,6 @@
         .search-item:hover, .search-item.selected { background-color: #007bff; color: #fff; }
         .search-item .item-cost { font-weight: bold; float: right; margin-left: 10px; }
         
-        /* Бейдж выбранной услуги */
         .cost-badge {
             display: inline-block;
             margin-left: 12px;
@@ -63,8 +62,6 @@
         </div>
 
         <button type="button" id="clearService" style="padding: 3px 8px; font-size: 12px; cursor: pointer; display: none;">✖ Сбросить</button>
-        
-        <!-- Блок отображения стоимости выбранного нанесения -->
         <span id="selectedServiceCostBadge" class="cost-badge" style="display: none;"></span>
 
         <div id="extraParamsWrap" style="display: none; margin-top: 10px; padding: 8px; background: #fff; border: 1px solid #ddd;">
@@ -121,10 +118,11 @@
                     </select>
                 </td>
                 <td></td>
-                <td>НДС</td>
+                <td>НДС / Налог</td>
                 <td>
                     <input id="skladWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="skladWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
+                    <input id="skladSimplified" name="vat" value="simplified" type="radio"> Упрощенка
                 </td>
                 <td></td>
                 <td>Курс</td>
@@ -141,10 +139,11 @@
                     <input id="russia" name="origin" value="russia" type="radio">
                 </td>
                 <td></td>
-                <td>НДС</td>
+                <td>НДС / Налог</td>
                 <td>
                     <input id="orderWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="orderWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
+                    <input id="orderSimplified" name="vat" value="simplified" type="radio"> Упрощенка
                 </td>
                 <td></td>
                 <td>Курс</td>
@@ -210,6 +209,12 @@
                 <td><input name="F4" value="0" type="text">₸ </td>
             </tr>
 
+            <tr>
+                <td></td><td></td><td></td>
+                <td>Расходы Упрощенка</td>
+                <td><input name="F4_simp" value="0" type="text">₸ </td>
+            </tr>
+
             <tr id="order-quantity-row">
                 <td>Тираж</td>
                 <td><input name="C5" value="1" type="text">шт. </td>
@@ -222,12 +227,6 @@
                 <td align="left">Приладка</td>
                 <td><input name="C6" value="0" type="text">шт. </td>
                 <td></td><td></td><td></td>
-            </tr>
-
-            <tr id="sklad-cash-row" style="display: none;">
-                <td></td><td></td><td></td>
-                <td>Расходы нал</td>
-                <td><input name="F5" value="0" type="text">₸ </td>
             </tr>
 
             <tr class="order-overtime">
@@ -365,7 +364,7 @@ $(document).ready(function() {
         currentMode = 'order';
         $('#btn-order').addClass('active');
         $('#btn-sklad').removeClass('active');
-        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').hide();
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').hide();
         $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
         calc();
     });
@@ -375,7 +374,7 @@ $(document).ready(function() {
         $('#btn-sklad').addClass('active');
         $('#btn-order').removeClass('active');
         $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
-        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #sklad-cash-row').show();
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').show();
         calc();
     });
 
@@ -504,7 +503,7 @@ function calc() {
     T.K3 = Number($('input[name="K3"]').val()) || 0; 
     T.PB2 = Number($('input[name="PB2"]').val()) || 7; 
     
-    ['C3', 'C5', 'C6', 'F3', 'F4', 'F5'].forEach(function(el) {
+    ['C3', 'C5', 'C6', 'F3', 'F4', 'F4_simp', 'F5'].forEach(function(el) {
         let visibleInput = $('tr:visible input[name="' + el + '"]');
         T[el] = visibleInput.length ? (Number(visibleInput.val()) || 0) : (Number($('input[name="' + el + '"]').val()) || 0);
     });
@@ -561,11 +560,20 @@ function calc() {
     addDiscount = Math.max(0, Math.min(addDiscount, 90)); 
     var addDiscountK = 1 - addDiscount / 100;                 
     
+    // Стандартные расходы
     F.F3 = T.F3 * markup;                                       
     F.markup = markup * 1.16;                                    
     F.F4 = T.F4 * F.markup;                                      
     F.F5 = T.F5 * markup;                                        
-    R.F4 = T.F4 + (F.F4 * 16 / 116);                             
+    R.F4 = T.F4 + (F.F4 * 16 / 116);
+
+    // УПРОЩЕНКА: Расчет с учетом НДС (16/116) и КПН (20%)
+    F.markup_simp = (markup * 1.16) / 0.80; // Компенсация обоих налогов
+    F.F4_simp = T.F4_simp * F.markup_simp;
+    let vat_simp = F.F4_simp * 16 / 116;
+    let kpn_simp = (F.F4_simp - vat_simp) * 0.20;
+    R.F4_simp = T.F4_simp + vat_simp + kpn_simp;
+    
     T.PB20 = T.F6 * 4000;                                        
     T.PB21 = T.F7 * 1800;                                        
     T.PB22 = T.PB20 + T.PB21;                                    
@@ -577,8 +585,8 @@ function calc() {
                 T.PB4 = T.C5 + T.C6;                                                
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;                              
                 T.PB12 = T.PB5 * markup;                                                         
-                T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                         
-                T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;                                     
+                T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;                         
+                T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;                                     
                 T.PB14 = T.PB12 + T.PB13;                                                        
                 T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                                   
                 T.C9 = T.C8 * T.C5;                                                 
@@ -586,19 +594,37 @@ function calc() {
                 T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));            
                 T.K4 = Math.round(T.F9 + T.K3);                                 
             }
-            if (vat == 'withoutVAT') {
+            else if (vat == 'withoutVAT') {
                 T.PB4 = T.C5 + T.C6;                                                
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;                              
                 T.PB12 = T.PB5 * F.markup;                                           
                 R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                     
-                T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                         
-                T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;             
+                T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;                         
+                T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;             
                 T.PB14 = T.PB12 + T.PB13;                                
                 T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                                   
                 T.C9 = T.C8 * T.C5;                                                 
                 T.F9 = Math.round(R.PB5 + T.PB11);                                              
                 T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));            
                 T.K4 = Math.round(T.F9 + T.K3);                                 
+            }
+            else if (vat == 'simplified') {
+                // Товар куплен по упрощенке: НДС 16/116 + КПН 20%
+                T.PB4 = T.C5 + T.C6;
+                T.PB5 = (T.C3 * T.PB4) * addDiscountK;
+                T.PB12 = T.PB5 * F.markup_simp;
+                let prodVat = T.PB12 * 16 / 116;
+                let prodKpn = (T.PB12 - prodVat) * 0.20;
+                R.PB5 = T.PB5 + prodVat + prodKpn;
+                
+                T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;
+                T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;
+                T.PB14 = T.PB12 + T.PB13;
+                T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;
+                T.C9 = T.C8 * T.C5;
+                T.F9 = Math.round(R.PB5 + T.PB11);
+                T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));
+                T.K4 = Math.round(T.F9 + T.K3);
             }
         }
         
@@ -608,8 +634,8 @@ function calc() {
             T.PB5 = (T.PB3 * T.PB4) * addDiscountK;                        
             T.PB12 = T.PB5 * F.markup;                                       
             R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                                     
-            T.PB11 = T.F3 + R.F4 + T.F5 + T.PB22 + T.K3;                     
-            T.PB13 = F.F3 + F.F4 + F.F5 + F.PB22 + T.K3;                             
+            T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;                     
+            T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;                             
             T.PB14 = T.PB12 + T.PB13;                                                
             T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;                               
             T.C9 = T.C8 * T.C5;                                             
@@ -628,8 +654,8 @@ function calc() {
         T.PB5 = sellingPrice * T.PB4;             
         T.PB8 = T.PB3 * T.PB4;                    
 
-        T.PB11 = T.F3 + R.F4 + T.F5 + T.K3;                 
-        T.PB13 = F.F3 + F.F4 + F.F5 + T.K3;                 
+        T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.K3;                 
+        T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + T.K3;                 
         T.PB14 = T.PB5 + T.PB13;                    
             
         T.C8 = T.C5 > 0 ? Math.round(T.PB14 / T.C5) : 0;         
