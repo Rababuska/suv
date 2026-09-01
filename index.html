@@ -566,13 +566,10 @@ function calc() {
     F.F5 = T.F5 * markup;                                        
     R.F4 = T.F4 + (F.F4 * 16 / 116);
 
-    // УПРОЩЕНКА (100% чистой маржи + скрытый доход): Коэффициент продажи = 2.0 * 1.45 = 2.90
+    // УПРОЩЕНКА (100% чистой маржи + калибровка расхода под markup для CRM)
     F.markup_simp = (2.0 * 1.16) / 0.80; // 2.90
     F.F4_simp = T.F4_simp * F.markup_simp;
-    let vat_simp = F.F4_simp * 16 / 116;
-    let kpn_simp = (F.F4_simp - vat_simp) * 0.20;
-    // Скрытый расход включает себестоимость, все налоги и скрытую прибыль
-    R.F4_simp = T.F4_simp + vat_simp + kpn_simp + (T.F4_simp * 0.65);
+    R.F4_simp = F.F4_simp / markup; // F9 * markup = продажа
     
     T.PB20 = T.F6 * 4000;                                        
     T.PB21 = T.F7 * 1800;                                        
@@ -609,14 +606,11 @@ function calc() {
                 T.K4 = Math.round(T.F9 + T.K3);                                 
             }
             else if (vat == 'simplified') {
-                // Товар по упрощенке: 100% чистой маржи + скрытый расход
                 T.PB4 = T.C5 + T.C6;
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;
                 T.PB12 = T.PB5 * F.markup_simp;
-                let prodVat = T.PB12 * 16 / 116;
-                let prodKpn = (T.PB12 - prodVat) * 0.20;
-                // Скрытый расход товара в F9: закупка + налоги + скрытая часть маржи
-                R.PB5 = T.PB5 + prodVat + prodKpn + (T.PB5 * 0.65);
+                // Точный расход под наценку markup (чтобы CRM считала честные 1.35)
+                R.PB5 = T.PB12 / markup;
                 
                 T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;
                 T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;
