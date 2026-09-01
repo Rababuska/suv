@@ -122,7 +122,7 @@
                 <td>
                     <input id="skladWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="skladWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
-                    <input id="skladSimplified" name="vat" value="simplified" type="radio"> Упрощенка
+                    <input id="skladSimplified" name="vat" value="simplified" type="radio"> Упрощенка (100%)
                 </td>
                 <td></td>
                 <td>Курс</td>
@@ -143,7 +143,7 @@
                 <td>
                     <input id="orderWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="orderWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
-                    <input id="orderSimplified" name="vat" value="simplified" type="radio"> Упрощенка
+                    <input id="orderSimplified" name="vat" value="simplified" type="radio"> Упрощенка (100%)
                 </td>
                 <td></td>
                 <td>Курс</td>
@@ -510,7 +510,6 @@ function calc() {
 
     let quantity = T.C5 || 1; 
 
-    // Расчет выбранного нанесения
     let supplierCostWithoutVat = 0; 
     let supplierCostWithVat = 0;   
     let autoCashExpense = 0;       
@@ -567,12 +566,13 @@ function calc() {
     F.F5 = T.F5 * markup;                                        
     R.F4 = T.F4 + (F.F4 * 16 / 116);
 
-    // УПРОЩЕНКА: Расчет с учетом НДС (16/116) и КПН (20%)
-    F.markup_simp = (markup * 1.16) / 0.80; // Компенсация обоих налогов
+    // УПРОЩЕНКА (100% чистой маржи + скрытый доход): Коэффициент продажи = 2.0 * 1.45 = 2.90
+    F.markup_simp = (2.0 * 1.16) / 0.80; // 2.90
     F.F4_simp = T.F4_simp * F.markup_simp;
     let vat_simp = F.F4_simp * 16 / 116;
     let kpn_simp = (F.F4_simp - vat_simp) * 0.20;
-    R.F4_simp = T.F4_simp + vat_simp + kpn_simp;
+    // Скрытый расход включает себестоимость, все налоги и скрытую прибыль
+    R.F4_simp = T.F4_simp + vat_simp + kpn_simp + (T.F4_simp * 0.65);
     
     T.PB20 = T.F6 * 4000;                                        
     T.PB21 = T.F7 * 1800;                                        
@@ -609,13 +609,14 @@ function calc() {
                 T.K4 = Math.round(T.F9 + T.K3);                                 
             }
             else if (vat == 'simplified') {
-                // Товар куплен по упрощенке: НДС 16/116 + КПН 20%
+                // Товар по упрощенке: 100% чистой маржи + скрытый расход
                 T.PB4 = T.C5 + T.C6;
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;
                 T.PB12 = T.PB5 * F.markup_simp;
                 let prodVat = T.PB12 * 16 / 116;
                 let prodKpn = (T.PB12 - prodVat) * 0.20;
-                R.PB5 = T.PB5 + prodVat + prodKpn;
+                // Скрытый расход товара в F9: закупка + налоги + скрытая часть маржи
+                R.PB5 = T.PB5 + prodVat + prodKpn + (T.PB5 * 0.65);
                 
                 T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;
                 T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;
