@@ -87,7 +87,7 @@
         <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="addDeliveryCost" checked> 
-                Включить доставку от поставщика в "Расходы нал" (<span id="deliveryAmountText">3 000</span> ₸)
+                Включить доставку
             </label>
         </div>
     </div>
@@ -122,11 +122,11 @@
                 <td>
                     <input id="skladWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="skladWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
-                    <input id="skladSimplified" name="vat" value="simplified" type="radio"> Упрощенка (100%)
+                    <input id="skladSimplified" name="vat" value="simplified" type="radio"> Упрощенка
                 </td>
                 <td></td>
                 <td>Курс</td>
-                <td><input name="PB2" value="7" type="text">₽/₸</td>
+                <td><input name="PB2" value="6" type="text">₽/₸</td>
             </tr>
 
             <!-- Строка для режима Основной заказ -->
@@ -143,11 +143,11 @@
                 <td>
                     <input id="orderWithVAT" name="vat" value="withVAT" checked="checked" type="radio"> С НДС
                     <input id="orderWithoutVAT" name="vat" value="withoutVAT" type="radio"> Без НДС
-                    <input id="orderSimplified" name="vat" value="simplified" type="radio"> Упрощенка (100%)
+                    <input id="orderSimplified" name="vat" value="simplified" type="radio"> Упрощенка
                 </td>
                 <td></td>
                 <td>Курс</td>
-                <td><input name="PB2" value="7" type="text">₽/₸ </td>
+                <td><input name="PB2" value="6" type="text">₽/₸ </td>
             </tr>
 
             <tr>
@@ -432,8 +432,6 @@ $(document).ready(function() {
             $('#serviceSearch').val(activeService.name);
             $('#searchResults').hide();
             $('#clearService, #delivery-wrap').show();
-            
-            $('#deliveryAmountText').text(activeService.supplier === 'vipline' ? '4 000' : '3 000');
 
             $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche));
             $('#clicheParams').toggle(!!activeService.isCliche);
@@ -501,7 +499,7 @@ function calc() {
     T.F7 = Number($('input[name="F7"]').val()) || 0; 
     T.K1 = Number($('input[name="K1"]').val()) || 0; 
     T.K3 = Number($('input[name="K3"]').val()) || 0; 
-    T.PB2 = Number($('input[name="PB2"]').val()) || 7; 
+    T.PB2 = Number($('input[name="PB2"]').val()) || 6; 
     
     ['C3', 'C5', 'C6', 'F3', 'F4', 'F4_simp', 'F5'].forEach(function(el) {
         let visibleInput = $('tr:visible input[name="' + el + '"]');
@@ -609,7 +607,6 @@ function calc() {
                 T.PB4 = T.C5 + T.C6;
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;
                 T.PB12 = T.PB5 * F.markup_simp;
-                // Точный расход под наценку markup (чтобы CRM считала честные 1.35)
                 R.PB5 = T.PB12 / markup;
                 
                 T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;
