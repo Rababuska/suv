@@ -24,7 +24,6 @@
         .menu button { cursor: pointer; padding: 4px 12px; font-weight: normal; }
         .menu button.active { font-weight: bold; background-color: #d0e4ff; border-color: #0066cc; }
         
-        /* Умный поиск */
         .search-box-wrap { display: inline-block; position: relative; width: 480px; }
         .search-input { width: 100%; padding: 5px 8px; text-align: left; font-size: 13px; box-sizing: border-box; }
         .search-results { 
@@ -47,9 +46,10 @@
         }
 
         /* Стили для таблицы КП Propaket */
-        .kp-table { margin-top: 15px; border-collapse: collapse; width: 100%; max-width: 500px; display: none; }
-        .kp-table td { border: 1px solid #ccc; padding: 8px; }
-        .kp-table td:first-child { background: #f9f9f9; width: 40%; font-weight: bold; }
+        .btn-success { background-color: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-primary { background-color: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-outline-danger { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -93,7 +93,7 @@
         <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="addDeliveryCost" checked> 
-                Включить доставку
+                Включить доставку от поставщика
             </label>
         </div>
     </div>
@@ -121,12 +121,13 @@
         <div class="delivery-checkbox">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="ppAddDelivery" checked> 
-                Включить доставку (3 000 ₸)
+                Включить доставку
             </label>
         </div>
         
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 15px;">
             <span id="ppCostBadge" class="cost-badge" style="display: none; margin-left: 0;"></span>
+            <button type="button" id="btn-add-kp" class="btn-success" style="display: none;">+ Добавить в таблицу КП</button>
         </div>
     </div>
 
@@ -236,7 +237,7 @@
                 <td><input name="C5" value="1" type="text">шт.</td>
                 <td></td>
                 <td>Накрутка</td>
-                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25)</td>
+                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф</td>
                 <td></td><td></td><td></td>
             </tr>
 
@@ -258,7 +259,7 @@
                 <td><input name="F4" value="0" type="text">₸ </td>
             </tr>
 
-            <tr class="row-order">
+            <tr class="row-order"> <!-- УПРОЩЕНКА ТЕПЕРЬ СКРЫТА И ОТНОСИТСЯ ТОЛЬКО К ОСНОВНОМУ ЗАКАЗУ -->
                 <td></td><td></td><td></td>
                 <td>Расходы Упрощенка</td>
                 <td><input name="F4_simp" value="0" type="text">₸ </td>
@@ -313,20 +314,52 @@
         </tbody>
     </table>
 
-    <!-- БЛОК КП PROPAKET -->
-    <div id="propaket-kp-block" style="display: none; margin-top: 20px;">
-        <button type="button" id="btn-generate-kp" style="padding: 6px 16px; background-color: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Сформировать КП</button>
+    <!-- БЛОК КП PROPAKET (появляется только после добавления позиции) -->
+    <div id="propaket-kp-block" style="display: none; margin-top: 30px; margin-bottom: 50px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; max-width: 900px;">
+            <div>
+                <h5 style="color: #6c757d; display: inline-block; margin: 0; font-family: Arial, sans-serif;">Таблица для копирования (Word / Excel)</h5>
+            </div>
+            <div>
+                <button type="button" id="btn-clear-kp" class="btn-outline-danger" style="margin-right: 10px;">Очистить всё</button>
+                <button type="button" id="btn-copy-kp" class="btn-primary">Скопировать таблицу для КП</button>
+            </div>
+        </div>
         
-        <table id="kp-table" class="kp-table">
-            <tbody>
-                <tr><td>Пакет</td><td id="kp-name"></td></tr>
-                <tr><td>Размер</td><td id="kp-size"></td></tr>
-                <tr><td>Нанесение (цветов)</td><td id="kp-print"></td></tr>
-                <tr><td>Тираж</td><td id="kp-qty"></td></tr>
-                <tr><td>Цена за 1 шт.</td><td id="kp-unit"></td></tr>
-                <tr><td>Итого к оплате</td><td><strong id="kp-total"></strong></td></tr>
-            </tbody>
-        </table>
+        <div style="padding: 15px; background: #fff; border: 1px solid #ccc; border-radius: 5px; max-width: 900px;">
+            <table id="kpCopyTable" width="100%" border="1" cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-family: 'Times New Roman', Times, serif; font-size: 14px;">
+                <colgroup>
+                    <col width="5%">
+                    <col width="20%">
+                    <col width="30%">
+                    <col width="10%">
+                    <col width="12%">
+                    <col width="13%">
+                    <col width="10%">
+                </colgroup>
+                <thead style="background-color: #f2f2f2;">
+                    <tr>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">№</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Наименование</th>
+                        <th align="left" style="border: 1px solid #000; padding: 6px; text-align: left;">Данные</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Кол-во / шт</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Стоимость за единицу / теңге</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Итого / теңге</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Срок / рабочие дни</th>
+                    </tr>
+                </thead>
+                <tbody id="kpTableBody">
+                    <!-- Заполняется из JS -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f9f9f9; font-weight: bold;">
+                        <td colspan="5" align="right" style="border: 1px solid #000; padding: 6px; text-align: right;">ИТОГО ПО ЗАКАЗУ:</td>
+                        <td align="center" style="border: 1px solid #000; padding: 6px; text-align: center;" id="kpGrandTotal">0</td>
+                        <td align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
     <!-- КЭШБЕК ДЛЯ ВСЕХ -->
@@ -340,6 +373,7 @@
 <script type="text/javascript">
 var currentMode = 'order'; 
 var activeService = null; 
+var kpItems = []; // Массив для позиций коммерческого предложения
 
 // Каталог услуг
 const servicesCatalog = [
@@ -431,7 +465,8 @@ $(document).ready(function() {
         $size.empty();
         if(propaketData[type]) {
             for (let size in propaketData[type].sizes) {
-                $size.append(new Option(size, size));
+                // Добавляем приписку "мм" к названию опции
+                $size.append(new Option(size + ' мм', size));
             }
         }
         calc();
@@ -440,7 +475,7 @@ $(document).ready(function() {
     updatePpSizes();
 
 
-    // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ (ЖЕСТКОЕ РАЗДЕЛЕНИЕ КЛАССАМИ) ---
+    // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ---
     $('#btn-order').click(function() {
         currentMode = 'order';
         $('.menu button').removeClass('active');
@@ -467,37 +502,90 @@ $(document).ready(function() {
         $(this).addClass('active');
         
         $('#main-supplier-panel, .row-order, .row-sklad').hide();
-        $('#propaket-panel, .row-propaket, .row-shared, #propaket-kp-block').show();
-        $('#kp-table').hide(); // Скрываем таблицу КП до клика
+        $('#propaket-panel, .row-propaket, .row-shared').show();
+        renderKpTable(); // Показать КП, если там уже что-то есть
         calc();
     });
 
-    // Формирование КП
-    $('#btn-generate-kp').click(function() {
-        let type = $('#ppType option:selected').text();
-        let size = $('#ppSize option:selected').text();
-        let front = $('#ppFront').val();
-        let back = $('#ppBack').val();
-        let qty = $('tr:visible input[name="C5"]').val();
-        let unitPrice = $('input[name="C8"]').val();
-        let totalPrice = $('input[name="C9"]').val();
+    // --- ФОРМИРОВАНИЕ ТАБЛИЦЫ КП ---
+    $('#btn-add-kp').click(function() {
+        let typeName = $('#ppType option:selected').text();
+        let sizeName = $('#ppSize option:selected').text(); // Уже с "мм"
+        let qty = Number($('tr:visible input[name="C5"]').val()) || 1;
+        let unitPrice = Number($('input[name="C8"]').val()) || 0;
+        let totalPrice = Number($('input[name="C9"]').val()) || 0;
         
-        let printText = front + '+' + back;
+        let frontColors = $('#ppFront').val();
+        let backColors = $('#ppBack').val();
+        let descHtml = `Размер: ${sizeName}<br>Нанесение: спереди ${frontColors} цв., сзади ${backColors} цв.`;
+        
         if ($('#ppAddDelivery').is(':checked')) {
-            totalPrice += ' ₸ (вкл. доставку 3000 ₸)';
-        } else {
-            totalPrice += ' ₸';
+            descHtml += '<br><i style="font-size:12px; color:#555;">(Вкл. доставку)</i>';
         }
 
-        $('#kp-name').text(type);
-        $('#kp-size').text(size);
-        $('#kp-print').text(printText);
-        $('#kp-qty').text(qty + ' шт.');
-        $('#kp-unit').text(unitPrice + ' ₸');
-        $('#kp-total').text(totalPrice);
+        kpItems.push({
+            title: typeName,
+            desc: descHtml,
+            qty: qty,
+            unit: unitPrice,
+            total: totalPrice,
+            delivery: '3-5' // Средний срок для пакетов
+        });
         
-        $('#kp-table').fadeIn();
+        renderKpTable();
+        alert('Добавлено в таблицу!');
     });
+
+    $('#btn-clear-kp').click(function() {
+        if (confirm('Вы уверены, что хотите полностью очистить таблицу КП?')) {
+            kpItems = [];
+            renderKpTable();
+        }
+    });
+
+    $('#btn-copy-kp').click(function() {
+        if (kpItems.length === 0) return;
+        let el = document.getElementById('kpCopyTable');
+        let range = document.createRange();
+        range.selectNode(el);
+        let sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        try {
+            document.execCommand('copy');
+            alert('Таблица КП скопирована в буфер обмена!');
+        } catch (err) {
+            alert('Не удалось скопировать. Пожалуйста, выделите таблицу вручную.');
+        }
+        sel.removeAllRanges();
+    });
+
+    function renderKpTable() {
+        if (kpItems.length === 0) {
+            $('#propaket-kp-block').hide();
+            return;
+        }
+        $('#propaket-kp-block').fadeIn();
+        let tbody = $('#kpTableBody');
+        tbody.empty();
+        let grandTotal = 0;
+
+        kpItems.forEach((item, idx) => {
+            grandTotal += item.total;
+            tbody.append(`
+                <tr>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${idx + 1}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;"><strong>${item.title}</strong></td>
+                    <td valign="top" style="border: 1px solid #000; padding: 6px; vertical-align: top;">${item.desc}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.qty}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.unit}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;"><strong>${item.total}</strong></td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.delivery}</td>
+                </tr>
+            `);
+        });
+        $('#kpGrandTotal').text(grandTotal);
+    }
 
     // --- УМНЫЙ ПОИСК (ОСНОВНОЙ ЗАКАЗ) ---
     $('#serviceSearch').on('input focus', function() {
@@ -624,7 +712,7 @@ function calc() {
     
     ['C3', 'C5', 'C6', 'F3', 'F4', 'F4_simp', 'F5'].forEach(function(el) {
         let visibleInput = $('tr:visible input[name="' + el + '"]');
-        T[el] = visibleInput.length ? (Number(visibleInput.val()) || 0) : 0; // Строгий выбор только ВИДИМЫХ
+        T[el] = visibleInput.length ? (Number(visibleInput.val()) || 0) : 0; 
     });
 
     let quantity = T.C5 || 1; 
@@ -642,7 +730,7 @@ function calc() {
 
     // --- ЛОГИКА PROPAKET ---
     if (currentMode === 'propaket') {
-        origin = 'kazakhstan'; // Жестко Казахстан и с НДС
+        origin = 'kazakhstan'; 
         vat = 'withVAT';
         
         let ppFront = parseInt($('#ppFront').val()) || 1;
@@ -661,13 +749,15 @@ function calc() {
             if (propaketInfo.cost > 0) {
                 supplierCostWithVat += propaketInfo.cost;
                 $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>`).show();
+                $('#btn-add-kp').show();
             } else {
                 $('#ppCostBadge').hide();
+                $('#btn-add-kp').hide();
             }
         }
         
         if ($('#ppAddDelivery').is(':checked')) {
-            autoCashExpense += 3000;
+            autoCashExpense += 2000; // Для пакетов ровно 2000
         }
     } 
     // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
@@ -813,7 +903,6 @@ function calc() {
         $('input[name="' + el + '"]').val(T[el] || 0);
     });
 
-    // Управление блоком долларов
     var showUsd = $('#showUsd').is(':checked');
     var usdRate = Number($('#usdRate').val()) || 1;
     if (showUsd && currentMode === 'order') {
