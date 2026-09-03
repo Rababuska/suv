@@ -23,7 +23,7 @@ const propaketData = {
         }
     },
     paper: {
-        name: "Бумажные пакеты",
+        name: "Бумажный",
         sizes: {
             "120x160x70": [{max: 59, p: 340}, {max: 191, p: 330}, {max: Infinity, p: 310}],
             "180x230x100": [{max: 59, p: 415}, {max: 191, p: 395}, {max: Infinity, p: 380}],
@@ -34,7 +34,7 @@ const propaketData = {
         }
     },
     kraft_brown: {
-        name: "Крафт пакет (бурый)",
+        name: "Крафт (бурый)",
         sizes: {
             "220x250x120": [{max: 499, p: 170}, {max: 1999, p: 155}, {max: Infinity, p: 145}],
             "240x280x140": [{max: 499, p: 175}, {max: 1999, p: 165}, {max: Infinity, p: 155}],
@@ -44,7 +44,7 @@ const propaketData = {
         }
     },
     kraft_white: {
-        name: "Крафт пакет (белый)",
+        name: "Крафт (белый)",
         sizes: {
             "220x250x120": [{max: 499, p: 190}, {max: 1999, p: 175}, {max: Infinity, p: 165}],
             "240x280x140": [{max: 499, p: 195}, {max: 1999, p: 185}, {max: Infinity, p: 175}],
@@ -59,11 +59,9 @@ const propaketData = {
 function calculatePropaket(type, size, qty, frontColors, backColors) {
     if (!propaketData[type] || !propaketData[type].sizes[size]) return { cost: 0, unitPrice: 0, calcQty: qty };
     
-    // Правило: для всех кроме бумажных минимальный расчетный тираж - 100 шт
-    let calcQty = qty;
-    if (type !== 'paper' && qty < 100) {
-        calcQty = 100;
-    }
+    // Минимальный тираж: 24 для бумажных, 100 для остальных
+    let minAllowed = (type === 'paper') ? 24 : 100;
+    let calcQty = qty < minAllowed ? minAllowed : qty;
 
     let tiers = propaketData[type].sizes[size];
     let tier = tiers.find(t => calcQty <= t.max);
@@ -77,7 +75,7 @@ function calculatePropaket(type, size, qty, frontColors, backColors) {
     let unitPrice = basePrice + extraCost;
     return { 
         unitPrice: unitPrice, 
-        cost: unitPrice * calcQty, // Расчет итоговой суммы поставщику (распыляем, если меньше 100)
+        cost: unitPrice * calcQty, 
         calcQty: calcQty
     };
 }
