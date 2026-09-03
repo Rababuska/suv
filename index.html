@@ -9,6 +9,7 @@
     <script src="exclusive.js"></script>
     <script src="kvant.js"></script>
     <script src="kitchen.js"></script>
+    <script src="propaket.js"></script> <!-- Подключаем PROPAKET -->
 
     <style type="text/css">
         input { text-align: right; margin-right: 6px; }
@@ -51,10 +52,11 @@
     <div class="menu">
         <button type="button" id="btn-order" class="active">ЗАКАЗ</button>
         <button type="button" id="btn-sklad">АЛМАТЫ</button>
+        <button type="button" id="btn-propaket">PROPAKET</button> <!-- Новая кнопка -->
     </div>
 
-    <!-- ПАНЕЛЬ НАНЕСЕНИЙ / УМНЫЙ ПОИСК -->
-    <div class="supplier-panel">
+    <!-- ПАНЕЛЬ ОСНОВНОГО ЗАКАЗА / УМНЫЙ ПОИСК -->
+    <div class="supplier-panel" id="main-supplier-panel">
         <strong>Нанесение:</strong>
         <div class="search-box-wrap">
             <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение, чехлы)..." autocomplete="off">
@@ -89,6 +91,38 @@
                 <input type="checkbox" id="addDeliveryCost" checked> 
                 Включить доставку
             </label>
+        </div>
+    </div>
+
+    <!-- ПАНЕЛЬ КОНСТРУКТОРА PROPAKET -->
+    <div class="supplier-panel" id="propaket-panel" style="display: none;">
+        <strong style="display: block; margin-bottom: 12px;">Конструктор пакетов:</strong>
+        
+        <div style="margin-bottom: 12px;">
+            <span style="display: inline-block; width: 100px;">Тип пакета:</span>
+            <select id="ppType" style="min-width: 250px; margin-right: 20px;"></select>
+            
+            <span>Размер:</span>
+            <select id="ppSize" style="min-width: 150px;"></select>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+            <span style="display: inline-block; width: 150px;">Цветов спереди (1-3):</span>
+            <input type="number" id="ppFront" value="1" min="1" max="3" class="mm-input" style="margin-right: 20px;">
+            
+            <span>Цветов сзади (0-3):</span>
+            <input type="number" id="ppBack" value="0" min="0" max="3" class="mm-input">
+        </div>
+
+        <div class="delivery-checkbox">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="ppAddDelivery" checked> 
+                Включить доставку (3 000 ₸)
+            </label>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <span id="ppCostBadge" class="cost-badge" style="display: none; margin-left: 0;"></span>
         </div>
     </div>
 
@@ -129,7 +163,7 @@
                 <td><input name="PB2" value="6" type="text">₽/₸</td>
             </tr>
 
-            <!-- Строка для режима Основной заказ -->
+            <!-- Строка для режима Основной заказ / PROPAKET -->
             <tr id="order-country-row">
                 <td>Страна происхождения товара</td>
                 <td>
@@ -170,7 +204,7 @@
             </tr>
 
             <tr id="unit-price-row">
-                <td>Цена за единицу</td>
+                <td>Цена за единицу (Товар)</td>
                 <td><input name="C3" value="0" type="text"><span id="currency-symbol">₸</span> </td>
                 <td></td>
                 <td>Расходы с НДС</td>
@@ -216,7 +250,7 @@
             </tr>
 
             <tr id="order-quantity-row">
-                <td>Тираж</td>
+                <td>Тираж (шт.)</td>
                 <td><input name="C5" value="1" type="text">шт. </td>
                 <td></td>
                 <td>Расходы нал</td>
@@ -276,14 +310,14 @@ var activeService = null;
 
 // Каталог услуг
 const servicesCatalog = [
-    // --- РЕКЛАМНАЯ КУХНЯ: УФ-ПЕЧАТЬ (с НДС) ---
+    // --- РЕКЛАМНАЯ КУХНЯ ---
     { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки рекламная кухня kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
     { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки рекламная кухня kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
     { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки рекламная кухня kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
     { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары рекламная кухня kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
     { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов рекламная кухня kitchen китчен', name: 'УФ: Чехлы для смартфонов [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
 
-    // --- КВАНТ: ГРАВИРОВКА (с НДС) ---
+    // --- КВАНТ ---
     { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
     { id: 'kv_pens_plastic', supplier: 'kvant', vat: true, keywords: 'гравировка ручки пластик квант', name: 'Гравировка: Ручки (Пластик) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_plastic, q) },
     { id: 'kv_pens_glossy', supplier: 'kvant', vat: true, keywords: 'гравировка ручки глянец лак квант', name: 'Гравировка: Ручки (Глянцевые/лак) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_glossy, q) },
@@ -295,19 +329,17 @@ const servicesCatalog = [
     { id: 'kv_backpacks_plate', supplier: 'kvant', vat: true, keywords: 'гравировка рюкзаки сумки шильда квант', name: 'Гравировка: Рюкзаки/сумки (на шильду) [Квант]', fn: (q) => getTierPrice(kvantPrices.backpacks_plate, q) },
     { id: 'kv_backpacks_body', supplier: 'kvant', vat: true, keywords: 'гравировка рюкзаки сумки ткань кожа квант', name: 'Гравировка: Рюкзаки/сумки (на ткань/кожу) [Квант]', fn: (q) => getTierPrice(kvantPrices.backpacks_body, q) },
     { id: 'kv_awards', supplier: 'kvant', vat: true, keywords: 'гравировка награды стекло акрил плакетки медали квант', name: 'Гравировка: Награды / плакетки [Квант]', fn: (q) => getTierPrice(kvantPrices.awards, q) },
-
-    // --- КВАНТ: УФ-ПЕЧАТЬ (с НДС) ---
     { id: 'kv_uv_pens', supplier: 'kvant', vat: true, keywords: 'уф печать ручки квант', name: 'УФ: Ручки [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_pens, q) },
     { id: 'kv_uv_notebooks', supplier: 'kvant', vat: true, keywords: 'уф печать блокноты ежедневники квант', name: 'УФ: Блокноты [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_notebooks, q) },
     { id: 'kv_uv_bottles', supplier: 'kvant', vat: true, keywords: 'уф печать термосы термокружки бутылки колонки квант', name: 'УФ: Термосы, кружки, бутылки, колонки [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_bottles, q) },
 
-    // --- VIPLINE (без НДС) ---
+    // --- VIPLINE ---
     { id: 'vip_uv_pens', supplier: 'vipline', vat: false, keywords: 'уф печать ручки зажигалки брелоки флешки виплайн vipline', name: 'УФ: Ручки, зажигалки, брелоки, флешки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'small_items', q) },
     { id: 'vip_uv_mugs', supplier: 'vipline', vat: false, keywords: 'уф печать кружки термосы бутылки плоские виплайн vipline', name: 'УФ: Кружки, термосы, бутылки (плоские) [VIPLINE]', fn: (q) => getViplineDirect('uv', 'bottles', q) },
     { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники vipline виплайн', name: 'УФ: Ежедневники, блокноты [VIPLINE]', fn: (q) => getViplineDirect('uv', 'diaries', q) },
     { id: 'vip_uv_powerbanks', supplier: 'vipline', vat: false, keywords: 'уф печать флешки визитки powerbank повербанки vipline виплайн', name: 'УФ: Флешки-визитки, повербанки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'powerbanks', q) },
     { id: 'vip_silk_light_1', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 1 цвет виплайн vipline', name: 'Шелкография: Светлые футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_1') },
-    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_2') },
+    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
     { id: 'vip_silk_dark_1', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 1 цвет виплайн vipline', name: 'Шелкография: Темные футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_1') },
     { id: 'vip_silk_dark_2', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 2 цвета виплайн vipline', name: 'Шелкография: Темные футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
     { id: 'vip_silk_lanyards_1', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 1 цвет vipline', name: 'Шелкография: Ланьярды (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_1') },
@@ -318,7 +350,7 @@ const servicesCatalog = [
     { id: 'vip_dtf_shirts', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf футболки текстиль виплайн vipline', name: 'ДТФ: Футболки до 10 см [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'shirts_small', q) },
     { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q) => calcDtfArea(q) },
 
-    // --- ЭКСКЛЮЗИВ (с НДС) ---
+    // --- ЭКСКЛЮЗИВ ---
     { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_notebook', q) },
     { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_sheet', q) },
     { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calculateExclusive('bags', q) },
@@ -359,26 +391,56 @@ function calcDtfArea(q) {
 }
 
 $(document).ready(function() {
-    // Переключение Заказ / Склад (Алматы)
+    // --- ИНИЦИАЛИЗАЦИЯ PROPAKET ---
+    let $ppType = $('#ppType');
+    for (let key in propaketData) {
+        $ppType.append(new Option(propaketData[key].name, key));
+    }
+    function updatePpSizes() {
+        let type = $('#ppType').val();
+        let $size = $('#ppSize');
+        $size.empty();
+        if(propaketData[type]) {
+            for (let size in propaketData[type].sizes) {
+                $size.append(new Option(size, size));
+            }
+        }
+        calc();
+    }
+    $('#ppType').change(updatePpSizes);
+    updatePpSizes();
+
+
+    // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ МЕНЮ ---
     $('#btn-order').click(function() {
         currentMode = 'order';
-        $('#btn-order').addClass('active');
-        $('#btn-sklad').removeClass('active');
-        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').hide();
-        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
+        $('.menu button').removeClass('active');
+        $(this).addClass('active');
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #propaket-panel').hide();
+        $('#main-supplier-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
         calc();
     });
 
     $('#btn-sklad').click(function() {
         currentMode = 'sklad';
-        $('#btn-sklad').addClass('active');
-        $('#btn-order').removeClass('active');
-        $('#order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
+        $('.menu button').removeClass('active');
+        $(this).addClass('active');
+        $('#main-supplier-panel, #propaket-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
         $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').show();
         calc();
     });
 
-    // Поиск нанесения
+    $('#btn-propaket').click(function() {
+        currentMode = 'propaket';
+        $('.menu button').removeClass('active');
+        $(this).addClass('active');
+        $('#main-supplier-panel, #sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').hide();
+        $('#propaket-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
+        calc();
+    });
+
+
+    // --- УМНЫЙ ПОИСК (ОСНОВНОЙ ЗАКАЗ) ---
     $('#serviceSearch').on('input focus', function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
@@ -513,10 +575,40 @@ function calc() {
     let autoCashExpense = 0;       
 
     var markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;   
-    markup = Math.max(markup, 1.25);                        
+    markup = Math.max(markup, 1.25);                                
     markup = Math.min(markup, 9);
 
-    if (activeService) {
+    // --- ЛОГИКА PROPAKET ---
+    if (currentMode === 'propaket') {
+        let ppFront = parseInt($('#ppFront').val()) || 1;
+        let ppBack = parseInt($('#ppBack').val()) || 0;
+        
+        // Лимиты цветов
+        if(ppFront < 1) { ppFront = 1; $('#ppFront').val(1); }
+        if(ppFront > 3) { ppFront = 3; $('#ppFront').val(3); }
+        if(ppBack < 0) { ppBack = 0; $('#ppBack').val(0); }
+        if(ppBack > 3) { ppBack = 3; $('#ppBack').val(3); }
+
+        let type = $('#ppType').val();
+        let size = $('#ppSize').val();
+        
+        if (typeof calculatePropaket === 'function') {
+            let propaketInfo = calculatePropaket(type, size, quantity, ppFront, ppBack);
+            if (propaketInfo.cost > 0) {
+                // Пакеты считаются с НДС
+                supplierCostWithVat += propaketInfo.cost;
+                $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>`).show();
+            } else {
+                $('#ppCostBadge').hide();
+            }
+        }
+        
+        if ($('#ppAddDelivery').is(':checked')) {
+            autoCashExpense += 3000;
+        }
+    } 
+    // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
+    else if (currentMode === 'order' && activeService) {
         let rawCost = activeService.fn(quantity);
         if (activeService.vat) {
             supplierCostWithVat += rawCost;
@@ -530,7 +622,7 @@ function calc() {
         }
 
         if ($('#addDeliveryCost').is(':checked')) {
-            autoCashExpense = (activeService.supplier === 'vipline') ? 4000 : 3000;
+            autoCashExpense += (activeService.supplier === 'vipline') ? 4000 : 3000;
         }
     } else {
         $('#selectedServiceCostBadge').hide();
@@ -567,14 +659,14 @@ function calc() {
     // УПРОЩЕНКА (100% чистой маржи + калибровка расхода под markup для CRM)
     F.markup_simp = (2.0 * 1.16) / 0.80; // 2.90
     F.F4_simp = T.F4_simp * F.markup_simp;
-    R.F4_simp = F.F4_simp / markup; // F9 * markup = продажа
+    R.F4_simp = F.F4_simp / markup; 
     
     T.PB20 = T.F6 * 4000;                                        
     T.PB21 = T.F7 * 1800;                                        
     T.PB22 = T.PB20 + T.PB21;                                    
     F.PB22 = T.PB22 * markup;                                        
     
-    if (currentMode === 'order') {
+    if (currentMode === 'order' || currentMode === 'propaket') {
         if (origin == 'kazakhstan') {
             if (vat == 'withVAT') {
                 T.PB4 = T.C5 + T.C6;                                                
@@ -593,7 +685,7 @@ function calc() {
                 T.PB4 = T.C5 + T.C6;                                                
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;                              
                 T.PB12 = T.PB5 * F.markup;                                           
-                R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                     
+                R.PB5 = T.PB5 + (T.PB12 * 16 / 116);                       
                 T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;                         
                 T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;             
                 T.PB14 = T.PB12 + T.PB13;                                
