@@ -9,7 +9,7 @@
     <script src="exclusive.js"></script>
     <script src="kvant.js"></script>
     <script src="kitchen.js"></script>
-    <script src="propaket.js"></script> <!-- Подключаем PROPAKET -->
+    <script src="propaket.js"></script>
 
     <style type="text/css">
         input { text-align: right; margin-right: 6px; }
@@ -52,7 +52,7 @@
     <div class="menu">
         <button type="button" id="btn-order" class="active">ЗАКАЗ</button>
         <button type="button" id="btn-sklad">АЛМАТЫ</button>
-        <button type="button" id="btn-propaket">PROPAKET</button> <!-- Новая кнопка -->
+        <button type="button" id="btn-propaket">PROPAKET</button>
     </div>
 
     <!-- ПАНЕЛЬ ОСНОВНОГО ЗАКАЗА / УМНЫЙ ПОИСК -->
@@ -163,7 +163,7 @@
                 <td><input name="PB2" value="6" type="text">₽/₸</td>
             </tr>
 
-            <!-- Строка для режима Основной заказ / PROPAKET -->
+            <!-- Строка для режима Основной заказ -->
             <tr id="order-country-row">
                 <td>Страна происхождения товара</td>
                 <td>
@@ -204,7 +204,7 @@
             </tr>
 
             <tr id="unit-price-row">
-                <td>Цена за единицу (Товар)</td>
+                <td>Цена за единицу</td>
                 <td><input name="C3" value="0" type="text"><span id="currency-symbol">₸</span> </td>
                 <td></td>
                 <td>Расходы с НДС</td>
@@ -224,6 +224,16 @@
                 <td></td>
                 <td>Накрутка</td>
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин = 1.25; макс = 9)</td>
+            </tr>
+
+            <!-- Минималистичный ряд для PROPAKET -->
+            <tr id="propaket-inputs-row" style="display: none;">
+                <td>Тираж</td>
+                <td><input name="C5" value="1" type="text">шт.</td>
+                <td></td>
+                <td>Накрутка</td>
+                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф</td>
+                <td></td><td></td><td></td>
             </tr>
 
             <tr id="order-discount-row">
@@ -250,7 +260,7 @@
             </tr>
 
             <tr id="order-quantity-row">
-                <td>Тираж (шт.)</td>
+                <td>Тираж</td>
                 <td><input name="C5" value="1" type="text">шт. </td>
                 <td></td>
                 <td>Расходы нал</td>
@@ -416,7 +426,7 @@ $(document).ready(function() {
         currentMode = 'order';
         $('.menu button').removeClass('active');
         $(this).addClass('active');
-        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #propaket-panel').hide();
+        $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #propaket-panel, #propaket-inputs-row').hide();
         $('#main-supplier-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
         calc();
     });
@@ -425,7 +435,7 @@ $(document).ready(function() {
         currentMode = 'sklad';
         $('.menu button').removeClass('active');
         $(this).addClass('active');
-        $('#main-supplier-panel, #propaket-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
+        $('#main-supplier-panel, #propaket-panel, #propaket-inputs-row, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
         $('#sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').show();
         calc();
     });
@@ -434,8 +444,8 @@ $(document).ready(function() {
         currentMode = 'propaket';
         $('.menu button').removeClass('active');
         $(this).addClass('active');
-        $('#main-supplier-panel, #sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row').hide();
-        $('#propaket-panel, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').show();
+        $('#main-supplier-panel, #sklad-product-row, #sklad-vat-expenses-row, #sklad-cliche-row, #order-country-row, #unit-price-row, #order-discount-row, #order-quantity-row, #order-cliche-row, .order-overtime').hide();
+        $('#propaket-panel, #propaket-inputs-row').show();
         calc();
     });
 
