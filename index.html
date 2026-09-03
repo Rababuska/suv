@@ -45,11 +45,13 @@
             vertical-align: middle;
         }
 
-        /* Стили для таблицы КП Propaket */
+        /* Стили кнопок и КП */
         .btn-success { background-color: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-success:hover { background-color: #218838; }
         .btn-primary { background-color: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-outline-danger { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-outline-danger { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .kp-badge { display: flex; align-items: center; background: #fff; border: 1px solid #ccc; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .kp-badge-btn { margin-left: 8px; color: #dc3545; background: none; border: none; font-weight: bold; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; }
     </style>
 </head>
 <body>
@@ -228,7 +230,7 @@
                 <td><input name="F3" value="0" type="text">₸ </td>
                 <td></td>
                 <td>Накрутка</td>
-                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25)</td>
+                <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин = 1.25; макс = 9)</td>
             </tr>
 
             <!-- КОМПАКТНЫЙ РЯД: PROPAKET (Минимум полей) -->
@@ -259,7 +261,7 @@
                 <td><input name="F4" value="0" type="text">₸ </td>
             </tr>
 
-            <tr class="row-order"> <!-- УПРОЩЕНКА ТЕПЕРЬ СКРЫТА И ОТНОСИТСЯ ТОЛЬКО К ОСНОВНОМУ ЗАКАЗУ -->
+            <tr class="row-order">
                 <td></td><td></td><td></td>
                 <td>Расходы Упрощенка</td>
                 <td><input name="F4_simp" value="0" type="text">₸ </td>
@@ -316,17 +318,23 @@
 
     <!-- БЛОК КП PROPAKET (появляется только после добавления позиции) -->
     <div id="propaket-kp-block" style="display: none; margin-top: 30px; margin-bottom: 50px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; max-width: 900px;">
-            <div>
-                <h5 style="color: #6c757d; display: inline-block; margin: 0; font-family: Arial, sans-serif;">Таблица для копирования (Word / Excel)</h5>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; max-width: 1000px;">
+            <div style="flex: 1;">
+                <h5 style="color: #6c757d; margin: 0 0 10px 0; font-family: Arial, sans-serif;">Таблица для копирования (Word / Excel)</h5>
+                
+                <!-- Блок управления позициями -->
+                <div id="kp-management" style="margin-bottom: 5px;">
+                    <small style="color: #888; font-weight: bold; display: block; margin-bottom: 5px;">Управление позициями:</small>
+                    <div id="kp-badges-container" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
             </div>
-            <div>
+            <div style="margin-left: 20px;">
                 <button type="button" id="btn-clear-kp" class="btn-outline-danger" style="margin-right: 10px;">Очистить всё</button>
                 <button type="button" id="btn-copy-kp" class="btn-primary">Скопировать таблицу для КП</button>
             </div>
         </div>
         
-        <div style="padding: 15px; background: #fff; border: 1px solid #ccc; border-radius: 5px; max-width: 900px;">
+        <div style="padding: 15px; background: #fff; border: 1px solid #ccc; border-radius: 5px; max-width: 1000px;">
             <table id="kpCopyTable" width="100%" border="1" cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-family: 'Times New Roman', Times, serif; font-size: 14px;">
                 <colgroup>
                     <col width="5%">
@@ -373,7 +381,7 @@
 <script type="text/javascript">
 var currentMode = 'order'; 
 var activeService = null; 
-var kpItems = []; // Массив для позиций коммерческого предложения
+var kpItems = []; 
 
 // Каталог услуг
 const servicesCatalog = [
@@ -453,6 +461,14 @@ function calcDtfArea(q) {
     return Math.round(singleCost * q);
 }
 
+// Форматирование цветов для КП
+function colorWords(num) {
+    if (num === 1) return 'один цвет';
+    if (num === 2) return 'два цвета';
+    if (num === 3) return 'три цвета';
+    return num + ' цветов';
+}
+
 $(document).ready(function() {
     // --- ИНИЦИАЛИЗАЦИЯ PROPAKET ---
     let $ppType = $('#ppType');
@@ -465,7 +481,6 @@ $(document).ready(function() {
         $size.empty();
         if(propaketData[type]) {
             for (let size in propaketData[type].sizes) {
-                // Добавляем приписку "мм" к названию опции
                 $size.append(new Option(size + ' мм', size));
             }
         }
@@ -503,37 +518,42 @@ $(document).ready(function() {
         
         $('#main-supplier-panel, .row-order, .row-sklad').hide();
         $('#propaket-panel, .row-propaket, .row-shared').show();
-        renderKpTable(); // Показать КП, если там уже что-то есть
+        renderKpTable(); 
         calc();
     });
 
     // --- ФОРМИРОВАНИЕ ТАБЛИЦЫ КП ---
     $('#btn-add-kp').click(function() {
-        let typeName = $('#ppType option:selected').text();
-        let sizeName = $('#ppSize option:selected').text(); // Уже с "мм"
+        let typeName = 'Пакет ' + $('#ppType option:selected').text();
+        let sizeName = $('#ppSize option:selected').text(); 
         let qty = Number($('tr:visible input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
         
-        let frontColors = $('#ppFront').val();
-        let backColors = $('#ppBack').val();
-        let descHtml = `Размер: ${sizeName}<br>Нанесение: спереди ${frontColors} цв., сзади ${backColors} цв.`;
-        
-        if ($('#ppAddDelivery').is(':checked')) {
-            descHtml += '<br><i style="font-size:12px; color:#555;">(Вкл. доставку)</i>';
+        let frontColors = parseInt($('#ppFront').val()) || 1;
+        let backColors = parseInt($('#ppBack').val()) || 0;
+
+        // Генерация развернутого описания нанесения
+        let printText = `нанесение спереди в ${colorWords(frontColors)}`;
+        if (backColors > 0) {
+            printText += `, сзади в ${colorWords(backColors)}`;
         }
+        printText += ` методом шелкографии (метод нанесения для всех пакетов одинаковый)`;
+
+        let descHtml = `Размер: ${sizeName}<br>${printText}`;
+        let deliveryTime = (qty >= 500) ? '9-11' : '5-7';
 
         kpItems.push({
+            id: Date.now() + Math.random(),
             title: typeName,
             desc: descHtml,
             qty: qty,
             unit: unitPrice,
             total: totalPrice,
-            delivery: '3-5' // Средний срок для пакетов
+            delivery: deliveryTime
         });
         
         renderKpTable();
-        alert('Добавлено в таблицу!');
     });
 
     $('#btn-clear-kp').click(function() {
@@ -541,6 +561,13 @@ $(document).ready(function() {
             kpItems = [];
             renderKpTable();
         }
+    });
+
+    // Функция удаления одной позиции
+    $(document).on('click', '.remove-kp-item', function() {
+        let idToRemove = $(this).data('id');
+        kpItems = kpItems.filter(item => item.id !== idToRemove);
+        renderKpTable();
     });
 
     $('#btn-copy-kp').click(function() {
@@ -566,12 +593,18 @@ $(document).ready(function() {
             return;
         }
         $('#propaket-kp-block').fadeIn();
+        
         let tbody = $('#kpTableBody');
+        let badgesContainer = $('#kp-badges-container');
+        
         tbody.empty();
+        badgesContainer.empty();
         let grandTotal = 0;
 
         kpItems.forEach((item, idx) => {
             grandTotal += item.total;
+            
+            // Отрисовка строки таблицы
             tbody.append(`
                 <tr>
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${idx + 1}</td>
@@ -582,6 +615,14 @@ $(document).ready(function() {
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;"><strong>${item.total}</strong></td>
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.delivery}</td>
                 </tr>
+            `);
+
+            // Отрисовка бейджика для удаления
+            badgesContainer.append(`
+                <div class="kp-badge">
+                    #${idx + 1} ${item.title} (${item.qty} шт) 
+                    <button class="kp-badge-btn remove-kp-item" data-id="${item.id}" title="Удалить позицию">✖</button>
+                </div>
             `);
         });
         $('#kpGrandTotal').text(grandTotal);
@@ -748,7 +789,10 @@ function calc() {
             let propaketInfo = calculatePropaket(type, size, quantity, ppFront, ppBack);
             if (propaketInfo.cost > 0) {
                 supplierCostWithVat += propaketInfo.cost;
-                $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>`).show();
+                
+                // Предупреждение о распылении минимального тиража
+                let minNotice = (propaketInfo.calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${propaketInfo.calcQty} шт)</span>` : '';
+                $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>${minNotice}`).show();
                 $('#btn-add-kp').show();
             } else {
                 $('#ppCostBadge').hide();
@@ -757,7 +801,7 @@ function calc() {
         }
         
         if ($('#ppAddDelivery').is(':checked')) {
-            autoCashExpense += 2000; // Для пакетов ровно 2000
+            autoCashExpense += 2000;
         }
     } 
     // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
@@ -875,7 +919,6 @@ function calc() {
             T.K4 = Math.round(T.F9 + T.K3);                             
         }
     } else {
-        // Режим Склад (Алматы)
         var productInfo = $('select[name="product"]').val().split(';');
         var sellingPrice = Number(productInfo[0]);   
         var purchasePrice = Number(productInfo[1]);  
