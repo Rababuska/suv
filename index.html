@@ -105,10 +105,10 @@
         
         <div style="margin-bottom: 12px;">
             <span style="display: inline-block; width: 100px;">Тип пакета:</span>
-            <select id="ppType" style="min-width: 250px; margin-right: 20px;"></select>
+            <select id="ppType" style="min-width: 270px; margin-right: 20px;"></select>
             
             <span>Размер:</span>
-            <select id="ppSize" style="min-width: 150px;"></select>
+            <select id="ppSize" style="min-width: 320px;"></select>
         </div>
 
         <div style="margin-bottom: 10px;">
@@ -242,7 +242,7 @@
                 <td></td><td></td><td></td>
             </tr>
 
-            <!-- РЯД PROPAKET 2: Пустая строка-разделитель для смещения -->
+            <!-- РЯД PROPAKET 2: Пустая строка-разделитель -->
             <tr class="row-propaket" style="display: none; height: 12px;">
                 <td colspan="8"></td>
             </tr>
@@ -349,11 +349,11 @@
             <table id="kpCopyTable" width="100%" border="1" cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-family: 'Times New Roman', Times, serif; font-size: 14px;">
                 <colgroup>
                     <col width="5%">
-                    <col width="30%">
+                    <col width="32%">
                     <col width="25%">
                     <col width="10%">
-                    <col width="12%">
-                    <col width="10%">
+                    <col width="11%">
+                    <col width="9%">
                     <col width="8%">
                 </colgroup>
                 <thead style="background-color: #f2f2f2;">
@@ -421,11 +421,11 @@ const servicesCatalog = [
     { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники vipline виплайн', name: 'УФ: Ежедневники, блокноты [VIPLINE]', fn: (q) => getViplineDirect('uv', 'diaries', q) },
     { id: 'vip_uv_powerbanks', supplier: 'vipline', vat: false, keywords: 'уф печать флешки визитки powerbank повербанки vipline виплайн', name: 'УФ: Флешки-визитки, повербанки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'powerbanks', q) },
     { id: 'vip_silk_light_1', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 1 цвет виплайн vipline', name: 'Шелкография: Светлые футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_1') },
-    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_2') },
+    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
     { id: 'vip_silk_dark_1', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 1 цвет виплайн vipline', name: 'Шелкография: Темные футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_1') },
     { id: 'vip_silk_dark_2', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 2 цвета виплайн vipline', name: 'Шелкография: Темные футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
     { id: 'vip_silk_lanyards_1', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 1 цвет vipline', name: 'Шелкография: Ланьярды (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_1') },
-    { id: 'vip_silk_lanyards_2', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 2 цвета vipline', name: 'Шелкография: Ланьярды (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_2') },
+    { id: 'vip_silk_lanyards_2', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 2 цвета виплайн vipline', name: 'Шелкография: Ланьярды (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_2') },
     { id: 'vip_silk_bags_1', supplier: 'vipline', vat: false, keywords: 'шелкография пакеты полиэтиленовые 1 цвет vipline', name: 'Шелкография: Пакеты ПВД (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'bags', q, 'colors_1') },
     { id: 'vip_silk_bags_2', supplier: 'vipline', vat: false, keywords: 'шелкография пакеты полиэтиленовые 2 цвета vipline', name: 'Шелкография: Пакеты ПВД (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'bags', q, 'colors_2') },
     { id: 'vip_dtf_caps', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf бейсболки кепки виплайн vipline', name: 'ДТФ: Бейсболки (стандарт) [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'caps', q) },
@@ -471,7 +471,6 @@ function calcDtfArea(q) {
     return Math.round(singleCost * q);
 }
 
-// Форматирование для развернутого описания
 function colorWords(num) {
     if (num === 1) return 'один цвет';
     if (num === 2) return 'два цвета';
@@ -491,11 +490,16 @@ $(document).ready(function() {
         let $size = $('#ppSize');
         $size.empty();
         if(propaketData[type]) {
-            for (let size in propaketData[type].sizes) {
-                $size.append(new Option(size + ' мм', size));
+            for (let sizeKey in propaketData[type].sizes) {
+                let m = propaketData[type].sizes[sizeKey];
+                let label = (m.d > 0) 
+                    ? `Ш:${m.w} x В:${m.h} x Г:${m.d} мм (${m.orient})`
+                    : `Ш:${m.w} x В:${m.h} мм (${m.orient})`;
+                $size.append(new Option(label, sizeKey));
             }
         }
-        let defaultQty = (type === 'paper') ? 24 : 100;
+        let isPaper = (type === 'paper' || type === 'paper_color');
+        let defaultQty = isPaper ? (type === 'paper_color' ? 60 : 24) : 100;
         $('tr.row-propaket input[name="C5"]').val(defaultQty);
         calc();
     }
@@ -536,8 +540,10 @@ $(document).ready(function() {
 
     // --- ФОРМИРОВАНИЕ ТАБЛИЦЫ КП ---
     $('#btn-add-kp').click(function() {
-        let typeName = $('#ppType option:selected').text();
-        let sizeRaw = $('#ppSize').val(); 
+        let typeKey = $('#ppType').val();
+        let sizeKey = $('#ppSize').val(); 
+        let meta = propaketData[typeKey]?.sizes[sizeKey];
+
         let qty = Number($('tr:visible input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
@@ -545,18 +551,26 @@ $(document).ready(function() {
         let frontColors = parseInt($('#ppFront').val()) || 1;
         let backColors = parseInt($('#ppBack').val()) || 0;
 
-        // Наименование как у счетов Propaket
         let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
         let totalColors = frontColors + backColors;
-        let itemTitle = `Полиграфические услуги - ${typeName} пакет нанесение - ${totalColors} цвет, ${sidesCount} ${sizeRaw}`;
 
-        // Развернутое описание в колонке данных
+        let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d}` : `${meta.w}*${meta.h}`) : sizeKey;
+        let orientStr = meta ? meta.orient : '';
+
+        // Наименование строго в стиле счетов поставщика
+        let itemTitle = `Полиграфические услуги - ${propaketData[typeKey].name} ${orientStr} пакет нанесение - ${totalColors} цвет, ${sidesCount} ${dimStr}`;
+
+        // Развернутые подробные Данные
         let printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
         if (backColors > 0) {
             printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
         }
+        
+        let sizeLabelFull = meta 
+            ? (meta.d > 0 ? `Ширина ${meta.w} мм, Высота ${meta.h} мм, Глубина ${meta.d} мм (${orientStr})` : `Ширина ${meta.w} мм, Высота ${meta.h} мм (${orientStr})`)
+            : sizeKey;
 
-        let descHtml = `Размер: ${sizeRaw} мм<br>${printText}`;
+        let descHtml = `Размер: ${sizeLabelFull}<br>${printText}`;
         let deliveryDays = (qty >= 500) ? '9-11' : '5-7';
 
         kpItems.push({
@@ -585,7 +599,6 @@ $(document).ready(function() {
         renderKpTable();
     });
 
-    // Копирование таблицы без alert-окна
     $('#btn-copy-kp').click(function() {
         if (kpItems.length === 0) return;
         let el = document.getElementById('kpCopyTable');
