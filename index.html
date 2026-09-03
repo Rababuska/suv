@@ -45,7 +45,6 @@
             vertical-align: middle;
         }
 
-        /* Стили кнопок и КП */
         .btn-success { background-color: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-success:hover { background-color: #218838; }
         .btn-primary { background-color: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -233,14 +232,16 @@
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин = 1.25; макс = 9)</td>
             </tr>
 
-            <!-- КОМПАКТНЫЙ РЯД: PROPAKET (Минимум полей) -->
+            <!-- РЯД ДЛЯ PROPAKET (Тираж, Накрутка и Расход F9) -->
             <tr class="row-propaket" style="display: none;">
                 <td>Тираж</td>
-                <td><input name="C5" value="1" type="text">шт.</td>
+                <td><input name="C5" value="100" type="text">шт.</td>
                 <td></td>
                 <td>Накрутка</td>
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф</td>
-                <td></td><td></td><td></td>
+                <td></td>
+                <td>Расход за тираж</td>
+                <td><input name="F9" value="0" type="text" readonly>₸</td>
             </tr>
 
             <!-- ПРОДОЛЖЕНИЕ: ОСНОВНОЙ ЗАКАЗ И СКЛАД -->
@@ -316,13 +317,12 @@
         </tbody>
     </table>
 
-    <!-- БЛОК КП PROPAKET (появляется только после добавления позиции) -->
+    <!-- БЛОК КП PROPAKET -->
     <div id="propaket-kp-block" style="display: none; margin-top: 30px; margin-bottom: 50px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; max-width: 1000px;">
             <div style="flex: 1;">
                 <h5 style="color: #6c757d; margin: 0 0 10px 0; font-family: Arial, sans-serif;">Таблица для копирования (Word / Excel)</h5>
                 
-                <!-- Блок управления позициями -->
                 <div id="kp-management" style="margin-bottom: 5px;">
                     <small style="color: #888; font-weight: bold; display: block; margin-bottom: 5px;">Управление позициями:</small>
                     <div id="kp-badges-container" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
@@ -338,12 +338,12 @@
             <table id="kpCopyTable" width="100%" border="1" cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-family: 'Times New Roman', Times, serif; font-size: 14px;">
                 <colgroup>
                     <col width="5%">
-                    <col width="20%">
                     <col width="30%">
+                    <col width="25%">
                     <col width="10%">
                     <col width="12%">
-                    <col width="13%">
                     <col width="10%">
+                    <col width="8%">
                 </colgroup>
                 <thead style="background-color: #f2f2f2;">
                     <tr>
@@ -353,17 +353,16 @@
                         <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Кол-во / шт</th>
                         <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Стоимость за единицу / теңге</th>
                         <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Итого / теңге</th>
-                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Срок / рабочие дни</th>
+                        <th align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">Срок / р. дн.</th>
                     </tr>
                 </thead>
                 <tbody id="kpTableBody">
-                    <!-- Заполняется из JS -->
                 </tbody>
                 <tfoot>
                     <tr style="background-color: #f9f9f9; font-weight: bold;">
                         <td colspan="5" align="right" style="border: 1px solid #000; padding: 6px; text-align: right;">ИТОГО ПО ЗАКАЗУ:</td>
                         <td align="center" style="border: 1px solid #000; padding: 6px; text-align: center;" id="kpGrandTotal">0</td>
-                        <td align="center" style="border: 1px solid #000; padding: 6px; text-align: center;">-</td>
+                        <td align="center" style="border: 1px solid #000; padding: 6px; text-align: center;" id="kpGrandDelivery">-</td>
                     </tr>
                 </tfoot>
             </table>
@@ -461,20 +460,13 @@ function calcDtfArea(q) {
     return Math.round(singleCost * q);
 }
 
-// Форматирование цветов для КП
-function colorWords(num) {
-    if (num === 1) return 'один цвет';
-    if (num === 2) return 'два цвета';
-    if (num === 3) return 'три цвета';
-    return num + ' цветов';
-}
-
 $(document).ready(function() {
     // --- ИНИЦИАЛИЗАЦИЯ PROPAKET ---
     let $ppType = $('#ppType');
     for (let key in propaketData) {
         $ppType.append(new Option(propaketData[key].name, key));
     }
+    
     function updatePpSizes() {
         let type = $('#ppType').val();
         let $size = $('#ppSize');
@@ -484,11 +476,13 @@ $(document).ready(function() {
                 $size.append(new Option(size + ' мм', size));
             }
         }
+        // Установка тиража по умолчанию: 24 для бумажных, 100 для остальных
+        let defaultQty = (type === 'paper') ? 24 : 100;
+        $('tr.row-propaket input[name="C5"]').val(defaultQty);
         calc();
     }
     $('#ppType').change(updatePpSizes);
     updatePpSizes();
-
 
     // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ---
     $('#btn-order').click(function() {
@@ -524,8 +518,8 @@ $(document).ready(function() {
 
     // --- ФОРМИРОВАНИЕ ТАБЛИЦЫ КП ---
     $('#btn-add-kp').click(function() {
-        let typeName = 'Пакет ' + $('#ppType option:selected').text();
-        let sizeName = $('#ppSize option:selected').text(); 
+        let typeName = $('#ppType option:selected').text();
+        let sizeRaw = $('#ppSize').val(); 
         let qty = Number($('tr:visible input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
@@ -533,24 +527,22 @@ $(document).ready(function() {
         let frontColors = parseInt($('#ppFront').val()) || 1;
         let backColors = parseInt($('#ppBack').val()) || 0;
 
-        // Генерация развернутого описания нанесения
-        let printText = `нанесение спереди в ${colorWords(frontColors)}`;
-        if (backColors > 0) {
-            printText += `, сзади в ${colorWords(backColors)}`;
-        }
-        printText += ` методом шелкографии (метод нанесения для всех пакетов одинаковый)`;
+        // Генерация наименования в стиле счетов Propaket
+        let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
+        let totalColors = frontColors + backColors;
+        let itemTitle = `Полиграфические услуги - ${typeName} пакет нанесение - ${totalColors} цвет, ${sidesCount} ${sizeRaw}`;
 
-        let descHtml = `Размер: ${sizeName}<br>${printText}`;
-        let deliveryTime = (qty >= 500) ? '9-11' : '5-7';
+        let descHtml = `Размер: ${sizeRaw} мм<br>Нанесение: спереди ${frontColors} цв., сзади ${backColors} цв.`;
+        let deliveryDays = (qty >= 500) ? '9-11' : '5-7';
 
         kpItems.push({
             id: Date.now() + Math.random(),
-            title: typeName,
+            title: itemTitle,
             desc: descHtml,
             qty: qty,
             unit: unitPrice,
             total: totalPrice,
-            delivery: deliveryTime
+            delivery: deliveryDays
         });
         
         renderKpTable();
@@ -563,7 +555,6 @@ $(document).ready(function() {
         }
     });
 
-    // Функция удаления одной позиции
     $(document).on('click', '.remove-kp-item', function() {
         let idToRemove = $(this).data('id');
         kpItems = kpItems.filter(item => item.id !== idToRemove);
@@ -600,15 +591,18 @@ $(document).ready(function() {
         tbody.empty();
         badgesContainer.empty();
         let grandTotal = 0;
+        let maxDelivery = '5-7';
 
         kpItems.forEach((item, idx) => {
             grandTotal += item.total;
+            if (item.delivery === '9-11') {
+                maxDelivery = '9-11';
+            }
             
-            // Отрисовка строки таблицы
             tbody.append(`
                 <tr>
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${idx + 1}</td>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;"><strong>${item.title}</strong></td>
+                    <td align="left" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: left; vertical-align: middle;"><strong>${item.title}</strong></td>
                     <td valign="top" style="border: 1px solid #000; padding: 6px; vertical-align: top;">${item.desc}</td>
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.qty}</td>
                     <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.unit}</td>
@@ -617,15 +611,15 @@ $(document).ready(function() {
                 </tr>
             `);
 
-            // Отрисовка бейджика для удаления
             badgesContainer.append(`
                 <div class="kp-badge">
-                    #${idx + 1} ${item.title} (${item.qty} шт) 
+                    #${idx + 1} ${item.qty} шт 
                     <button class="kp-badge-btn remove-kp-item" data-id="${item.id}" title="Удалить позицию">✖</button>
                 </div>
             `);
         });
         $('#kpGrandTotal').text(grandTotal);
+        $('#kpGrandDelivery').text(maxDelivery);
     }
 
     // --- УМНЫЙ ПОИСК (ОСНОВНОЙ ЗАКАЗ) ---
@@ -790,7 +784,6 @@ function calc() {
             if (propaketInfo.cost > 0) {
                 supplierCostWithVat += propaketInfo.cost;
                 
-                // Предупреждение о распылении минимального тиража
                 let minNotice = (propaketInfo.calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${propaketInfo.calcQty} шт)</span>` : '';
                 $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>${minNotice}`).show();
                 $('#btn-add-kp').show();
@@ -942,9 +935,10 @@ function calc() {
     $('input[name="K1"]').val(T.K1.toFixed(2)); 
     $('input[name="K3"]').val(T.K3.toFixed(2)); 
 
-    ['C8', 'C9', 'F9', 'K2', 'K4'].forEach(function(el) {
-        $('input[name="' + el + '"]').val(T[el] || 0);
-    });
+    // Записываем значения во все видимые и скрытые поля расхода/итога
+    $('input[name="C8"]').val(T.C8 || 0);
+    $('input[name="C9"]').val(T.C9 || 0);
+    $('input[name="F9"]').val(T.F9 || 0);
 
     var showUsd = $('#showUsd').is(':checked');
     var usdRate = Number($('#usdRate').val()) || 1;
