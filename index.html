@@ -62,7 +62,7 @@
 
     <!-- ПАНЕЛЬ ОСНОВНОГО ЗАКАЗА -->
     <div class="supplier-panel" id="main-supplier-panel">
-        <strong>Нанесение:</strong>
+        <strong>Основное нанесение:</strong>
         <div class="search-box-wrap">
             <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение)..." autocomplete="off">
             <div id="searchResults" class="search-results"></div>
@@ -97,6 +97,11 @@
                 Включить доставку от поставщика
             </label>
         </div>
+
+        <!-- Контейнер для дополнительных нанесений -->
+        <div id="additionalServicesContainer" style="margin-top: 15px; border-top: 1px dashed #bce8f1; padding-top: 15px;"></div>
+
+        <button type="button" id="btnAddExtraService" class="btn-success" style="margin-top: 10px; font-size: 12px; background-color: #17a2b8;">+ Добавить доп. нанесение</button>
     </div>
 
     <!-- ПАНЕЛЬ КОНСТРУКТОРА PROPAKET -->
@@ -390,7 +395,7 @@
 
 <script type="text/javascript">
 var currentMode = 'order'; 
-var activeService = null; 
+var mainActiveService = null; 
 var kpItems = []; 
 
 // Каталог услуг
@@ -557,10 +562,8 @@ $(document).ready(function() {
         let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d}` : `${meta.w}*${meta.h}`) : sizeKey;
         let orientStr = meta ? meta.orient : '';
 
-        // Наименование строго в стиле счетов поставщика
         let itemTitle = `Полиграфические услуги - ${propaketData[typeKey].name} ${orientStr} пакет нанесение - ${totalColors} цвет, ${sidesCount} ${dimStr}`;
 
-        // Развернутые подробные Данные
         let printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
         if (backColors > 0) {
             printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
@@ -712,32 +715,91 @@ $(document).ready(function() {
         $res.show();
     });
 
-    $(document).on('click', '.search-item', function() {
+    $(document).on('click', '#searchResults .search-item', function() {
         let id = $(this).data('id');
-        activeService = servicesCatalog.find(s => s.id === id);
-        if (activeService) {
-            $('#serviceSearch').val(activeService.name);
+        mainActiveService = servicesCatalog.find(s => s.id === id);
+        if (mainActiveService) {
+            $('#serviceSearch').val(mainActiveService.name);
             $('#searchResults').hide();
             $('#clearService, #delivery-wrap').show();
 
-            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche));
-            $('#clicheParams').toggle(!!activeService.isCliche);
-            $('#dtfParams').toggle(!!activeService.isDtfArea);
+            $('#extraParamsWrap').toggle(!!(mainActiveService.isDtfArea || mainActiveService.isCliche));
+            $('#clicheParams').toggle(!!mainActiveService.isCliche);
+            $('#dtfParams').toggle(!!mainActiveService.isDtfArea);
 
             calc();
         }
     });
 
     $('#clearService').click(function() {
-        activeService = null;
+        mainActiveService = null;
         $('#serviceSearch').val('');
         $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults, #selectedServiceCostBadge').hide();
         calc();
     });
 
+    // --- ДОБАВЛЕНИЕ ДОПОЛНИТЕЛЬНЫХ НАНЕСЕНИЙ ---
+    $('#btnAddExtraService').click(function() {
+        let extraId = Date.now();
+        let html = `
+            <div class="extra-service-block" data-id="${extraId}" style="margin-bottom: 10px; background: #fff; padding: 8px; border: 1px solid #bce8f1; border-radius: 4px; position: relative;">
+                <strong>Доп. нанесение:</strong>
+                <div class="search-box-wrap" style="width: 400px;">
+                    <input type="text" class="search-input extra-search-input" placeholder="Поиск доп. услуги..." autocomplete="off">
+                    <div class="search-results extra-search-results" style="display:none;"></div>
+                </div>
+                <button type="button" class="btn-outline-danger remove-extra" style="padding: 2px 6px; font-size: 11px; float: right;">Удалить</button>
+                <span class="extra-cost-badge cost-badge" style="display: none;"></span>
+            </div>
+        `;
+        $('#additionalServicesContainer').append(html);
+    });
+
+    $(document).on('input focus', '.extra-search-input', function() {
+        let $input = $(this);
+        let $resContainer = $input.siblings('.extra-search-results');
+        let query = $input.val().toLowerCase().trim();
+        $resContainer.empty();
+
+        if (query.length === 0) { $resContainer.hide(); return; }
+
+        let matches = servicesCatalog.filter(s => {
+            let words = query.split(' ');
+            return words.every(w => s.keywords.toLowerCase().includes(w) || s.name.toLowerCase().includes(w));
+        });
+
+        if (matches.length === 0) {
+            $resContainer.append('<div class="search-item" style="color: #888;">Ничего не найдено</div>').show();
+            return;
+        }
+
+        matches.forEach(item => {
+            $resContainer.append(`<div class="search-item extra-search-item" data-id="${item.id}">${item.name}</div>`);
+        });
+        $resContainer.show();
+    });
+
+    $(document).on('click', '.extra-search-item', function() {
+        let id = $(this).data('id');
+        let $block = $(this).closest('.extra-service-block');
+        let serviceObj = servicesCatalog.find(s => s.id === id);
+        
+        if (serviceObj) {
+            $block.data('service', serviceObj);
+            $block.find('.extra-search-input').val(serviceObj.name);
+            $block.find('.extra-search-results').hide();
+            calc();
+        }
+    });
+
+    $(document).on('click', '.remove-extra', function() {
+        $(this).closest('.extra-service-block').remove();
+        calc();
+    });
+
     $(document).click(function(e) {
         if (!$(e.target).closest('.search-box-wrap').length) {
-            $('#searchResults').hide();
+            $('.search-results').hide();
         }
     });
 
@@ -841,24 +903,47 @@ function calc() {
         }
     } 
     // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
-    else if (currentMode === 'order' && activeService) {
-        let rawCost = activeService.fn(quantity);
-        if (activeService.vat) {
-            supplierCostWithVat += rawCost;
-            $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+    else if (currentMode === 'order') {
+        // 1. Основное нанесение
+        if (mainActiveService) {
+            let rawCost = mainActiveService.fn(quantity);
+            if (mainActiveService.vat) {
+                supplierCostWithVat += rawCost;
+                $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+            } else {
+                supplierCostWithoutVat += rawCost;
+                let f4_markup = markup * 1.16;
+                let f_f4 = rawCost * f4_markup;
+                let realExp = Math.round(rawCost + (f_f4 * 16 / 116));
+                $('#selectedServiceCostBadge').html(`Расход: <strong>${realExp.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">(прайс ${rawCost.toLocaleString('ru-RU')} без НДС)</span>`).show();
+            }
+
+            if ($('#addDeliveryCost').is(':checked')) {
+                autoCashExpense += (mainActiveService.supplier === 'vipline') ? 4000 : 3000;
+            }
         } else {
-            supplierCostWithoutVat += rawCost;
-            let f4_markup = markup * 1.16;
-            let f_f4 = rawCost * f4_markup;
-            let realExp = Math.round(rawCost + (f_f4 * 16 / 116));
-            $('#selectedServiceCostBadge').html(`Расход: <strong>${realExp.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">(прайс ${rawCost.toLocaleString('ru-RU')} без НДС)</span>`).show();
+            $('#selectedServiceCostBadge').hide();
         }
 
-        if ($('#addDeliveryCost').is(':checked')) {
-            autoCashExpense += (activeService.supplier === 'vipline') ? 4000 : 3000;
-        }
-    } else {
-        $('#selectedServiceCostBadge').hide();
+        // 2. Дополнительные нанесения
+        $('.extra-service-block').each(function() {
+            let sObj = $(this).data('service');
+            if (sObj) {
+                let rawExtraCost = sObj.fn(quantity);
+                let $badge = $(this).find('.extra-cost-badge');
+                if (sObj.vat) {
+                    supplierCostWithVat += rawExtraCost;
+                    $badge.html(`Расход: ${rawExtraCost.toLocaleString('ru-RU')} ₸ (с НДС)`).show();
+                } else {
+                    supplierCostWithoutVat += rawExtraCost;
+                    let f4_markup = markup * 1.16;
+                    let f_f4 = rawExtraCost * f4_markup;
+                    let realExtraExp = Math.round(rawExtraCost + (f_f4 * 16 / 116));
+                    supplierCostWithoutVat += (realExtraExp - rawExtraCost);
+                    $badge.html(`Расход: ${realExtraExp.toLocaleString('ru-RU')} ₸`).show();
+                }
+            }
+        });
     }
     
     T.F4 += supplierCostWithoutVat; 
