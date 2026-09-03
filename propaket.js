@@ -55,14 +55,20 @@ const propaketData = {
     }
 };
 
-// Функция расчета
+// Функция расчета с учетом минимальных тиражей
 function calculatePropaket(type, size, qty, frontColors, backColors) {
-    if (!propaketData[type] || !propaketData[type].sizes[size]) return { cost: 0, unitPrice: 0 };
+    if (!propaketData[type] || !propaketData[type].sizes[size]) return { cost: 0, unitPrice: 0, calcQty: qty };
     
+    // Правило: для всех кроме бумажных минимальный расчетный тираж - 100 шт
+    let calcQty = qty;
+    if (type !== 'paper' && qty < 100) {
+        calcQty = 100;
+    }
+
     let tiers = propaketData[type].sizes[size];
-    let tier = tiers.find(t => qty <= t.max);
+    let tier = tiers.find(t => calcQty <= t.max);
     
-    if (!tier) return { cost: 0, unitPrice: 0 };
+    if (!tier) return { cost: 0, unitPrice: 0, calcQty: calcQty };
     
     let basePrice = tier.p;
     let extraColors = (frontColors - 1) + backColors; 
@@ -71,6 +77,7 @@ function calculatePropaket(type, size, qty, frontColors, backColors) {
     let unitPrice = basePrice + extraCost;
     return { 
         unitPrice: unitPrice, 
-        cost: unitPrice * qty 
+        cost: unitPrice * calcQty, // Расчет итоговой суммы поставщику (распыляем, если меньше 100)
+        calcQty: calcQty
     };
 }
