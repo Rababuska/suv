@@ -437,10 +437,11 @@ const servicesCatalog = [
     { id: 'vip_dtf_shirts', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf футболки текстиль виплайн vipline', name: 'ДТФ: Футболки до 10 см [VIPLINE]', fn: (q, s) => getViplineDirect('dtf', 'shirts_small', q) },
     { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q, s) => calcDtfArea(q, s) },
 
+    // --- ЭКСКЛЮЗИВ (с НДС) ---
     { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q, s) => calculateExclusiveItem('emboss_notebook', q, s) },
     { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q, s) => calculateExclusiveItem('emboss_sheet', q, s) },
-    { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q, s) => calculateExclusive('bags', q) },
-    { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q, s) => calculateExclusive('die_cutting', q) }
+    { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q, s) => calculateExclusiveItem('bags', q, s) },
+    { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q, s) => calculateExclusiveItem('die_cutting', q, s) }
 ];
 
 function getTierPrice(tiers, q) {
@@ -477,26 +478,49 @@ function calcDtfArea(q, serviceInstance) {
     return Math.round(singleCost * q);
 }
 
+// Надежный расчет тарифов Эксклюзива с учетом приладки, ударов и клише
 function calculateExclusiveItem(serviceType, q, serviceInstance) {
-    if (typeof exclusivePrices === 'undefined') return 0;
-    let sheet = exclusivePrices[serviceType];
-    if (!sheet) return 0;
-    
-    let tier = sheet.find(t => q <= t.max);
-    if (!tier) return 0;
-    
-    let workCost = tier.price * q;
-    if (workCost < 5000) workCost = 5000;
-    
-    let clicheCost = 0;
-    if (!serviceInstance?.clicheExists) {
-        let w = Number(serviceInstance?.clicheW) || 50;
-        let h = Number(serviceInstance?.clicheH) || 50;
-        let area = ((w + 10) * (h + 10)) / 100;
-        clicheCost = area * 250;
-        if (clicheCost < 6000) clicheCost = 6000;
+    let totalCost = 0;
+
+    if (serviceType === 'emboss_notebook' || serviceType === 'emboss_sheet') {
+        let priladka = 7000;
+        let udarPrice = (serviceType === 'emboss_notebook') ? 150 : 100;
+        let clicheCost = 0;
+
+        if (!serviceInstance?.clicheExists) {
+            let w = Number(serviceInstance?.clicheW) || 0;
+            let h = Number(serviceInstance?.clicheH) || 0;
+            let areaCm = 0;
+            if (w > 0 && h > 0) {
+                areaCm = ((w + 10) * (h + 10)) / 100;
+            }
+            let calculatedClicheCost = areaCm * 250;
+            clicheCost = Math.max(3500, calculatedClicheCost); // Минималка 3 500 тг
+        }
+
+        totalCost = clicheCost + priladka + (udarPrice * q);
+    } else if (serviceType === 'bags') {
+        if (typeof calculateExclusive === 'function') {
+            totalCost = calculateExclusive('bags', q);
+        } else {
+            const exclusiveBagsPrices = [
+                { max: 25, price: 600 },
+                { max: 50, price: 500 },
+                { max: 80, price: 450 },
+                { max: 100, price: 430 },
+                { max: Infinity, price: 370 }
+            ];
+            let tier = exclusiveBagsPrices.find(t => q <= t.max);
+            let calculatedBagsCost = tier ? tier.price * q : 0;
+            totalCost = Math.max(12000, calculatedBagsCost);
+        }
+    } else if (serviceType === 'die_cutting') {
+        let priladka = 8000;
+        let udarPrice = 15;
+        totalCost = priladka + (udarPrice * q);
     }
-    return Math.round(workCost + clicheCost);
+
+    return Math.round(totalCost);
 }
 
 function getSupplierDeliveryCost(supplier) {
@@ -537,7 +561,9 @@ function renderServicesList() {
 
         let extraParamsHtml = '';
         if (s.isCliche) {
-            let area = (((Number(s.clicheW) || 50) + 10) * ((Number(s.clicheH) || 50) + 10)) / 100;
+            let wVal = (s.clicheW !== undefined) ? s.clicheW : 50;
+            let hVal = (s.clicheH !== undefined) ? s.clicheH : 50;
+            let area = (((Number(wVal) || 0) + 10) * ((Number(hVal) || 0) + 10)) / 100;
             extraParamsHtml = `
                 <div style="margin-top: 4px; font-size: 12px; background: #f8f9fa; padding: 6px; border: 1px solid #eee;">
                     <label style="cursor: pointer; margin-right: 12px;">
@@ -545,8 +571,8 @@ function renderServicesList() {
                     </label>
                     <span style="opacity: ${s.clicheExists ? '0.4' : '1'};">
                         Размер (мм): 
-                        <input type="number" class="mm-input srv-cliche-w" data-id="${s.uid}" value="${s.clicheW}" min="0"> x 
-                        <input type="number" class="mm-input srv-cliche-h" data-id="${s.uid}" value="${s.clicheH}" min="0">
+                        <input type="number" class="mm-input srv-cliche-w" data-id="${s.uid}" value="${wVal}" min="0"> x 
+                        <input type="number" class="mm-input srv-cliche-h" data-id="${s.uid}" value="${hVal}" min="0">
                         <span style="color: #888;">(${area.toFixed(1)} см²)</span>
                     </span>
                 </div>
@@ -660,7 +686,7 @@ $(document).ready(function() {
         calc();
     });
 
-    // --- ФОРМИРОВАНИЕ ТАБЛИЦЫ КП ---
+    // --- ТАБЛИЦА КП PROPAKET ---
     $('#btn-add-kp').click(function() {
         let typeKey = $('#ppType').val();
         let sizeKey = $('#ppSize').val(); 
@@ -844,7 +870,7 @@ $(document).ready(function() {
                 clicheW: 50,
                 clicheH: 50,
                 dtfPoints: [{ w: 100, h: 100 }],
-                addDelivery: true // Доставка включена по умолчанию
+                addDelivery: true
             };
             activeServices.push(newInstance);
             renderServicesList();
@@ -876,7 +902,7 @@ $(document).ready(function() {
         }
     });
 
-    // Изменение клише конкретного нанесения
+    // Клише
     $(document).on('change', '.srv-cliche-exists', function() {
         let uid = $(this).data('id');
         let s = activeServices.find(it => it.uid === uid);
@@ -897,10 +923,13 @@ $(document).ready(function() {
             calc();
             let area = ((s.clicheW + 10) * (s.clicheH + 10)) / 100;
             card.find('span:contains("см²")').text(`(${area.toFixed(1)} см²)`);
+            let q = Number($('tr.row-order input[name="C5"]').val()) || T.C5 || 1;
+            let rawCost = s.fn(q, s);
+            card.find('.service-badge-info').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (за ${q} шт с НДС)`);
         }
     });
 
-    // Изменение точек ДТФ конкретного нанесения
+    // ДТФ точки
     $(document).on('click', '.btn-add-dtf-pt', function() {
         let uid = $(this).data('id');
         let s = activeServices.find(it => it.uid === uid);
@@ -934,7 +963,7 @@ $(document).ready(function() {
         }
     });
 
-    // Индивидуальный чекбокс доставки нанесения
+    // Доставка
     $(document).on('change', '.srv-delivery', function() {
         let uid = $(this).data('id');
         let s = activeServices.find(it => it.uid === uid);
@@ -944,7 +973,7 @@ $(document).ready(function() {
         }
     });
 
-    // Перерисовка карточек при смене тиража или накрутки
+    // Обновление тиража / наценки
     $('tr.row-order input[name="C5"], tr.row-order input[name="markup"]').on('input change keyup', function() {
         if (currentMode === 'order' && activeServices.length > 0) {
             renderServicesList();
@@ -984,7 +1013,7 @@ function calc() {
     var origin = $('tr:visible input[name="origin"]:checked').val() || 'kazakhstan';
     var vat = $('tr:visible input[name="vat"]:checked').val() || 'withVAT';
 
-    // --- ЛОГИКА PROPAKET ---
+    // --- PROPAKET ---
     if (currentMode === 'propaket') {
         origin = 'kazakhstan'; 
         vat = 'withVAT';
@@ -1004,7 +1033,6 @@ function calc() {
             let propaketInfo = calculatePropaket(type, size, quantity, ppFront, ppBack);
             if (propaketInfo.cost > 0) {
                 supplierCostWithVat += propaketInfo.cost;
-                
                 let minNotice = (propaketInfo.calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${propaketInfo.calcQty} шт)</span>` : '';
                 $('#ppCostBadge').html(`Итого пакеты: <strong>${propaketInfo.cost.toLocaleString('ru-RU')} ₸</strong> <br><span style="font-size:11px; color:#555;">(по ${propaketInfo.unitPrice} ₸/шт с НДС)</span>${minNotice}`).show();
                 $('#btn-add-kp').show();
@@ -1018,7 +1046,7 @@ function calc() {
             autoCashExpense += 2000;
         }
     } 
-    // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА (МНОЖЕСТВЕННЫЕ НАНЕСЕНИЯ) ---
+    // --- ОСНОВНОЙ ЗАКАЗ ---
     else if (currentMode === 'order' && activeServices.length > 0) {
         let totalDeliveryCash = 0;
 
