@@ -20,7 +20,7 @@
         .small-input { width: 30px; }
         .supplier-panel { margin: 15px 0; padding: 12px 15px; background-color: #f0f8ff; border: 1px solid #cce5ff; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; position: relative; }
         .mm-input { width: 45px; padding: 2px; text-align: center; }
-        .delivery-checkbox { margin-top: 10px; font-size: 13px; color: #444; border-top: 1px dashed #ccc; padding-top: 8px; }
+        .delivery-checkbox { margin-top: 6px; font-size: 13px; color: #444; border-top: 1px dashed #ddd; padding-top: 6px; }
         .menu button { cursor: pointer; padding: 4px 12px; font-weight: normal; }
         .menu button.active { font-weight: bold; background-color: #d0e4ff; border-color: #0066cc; }
         
@@ -100,17 +100,9 @@
             <button type="button" id="btn-cancel-search" style="padding: 4px 8px; font-size: 12px; cursor: pointer; display: none;">Отмена</button>
         </div>
 
-        <div style="margin-top: 10px; display: flex; align-items: center;">
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
             <button type="button" id="btn-show-add-service" class="btn-primary" style="font-size: 12px; display: none;">+ Добавить еще нанесение</button>
-            <span id="allServicesCostBadge" class="cost-badge" style="display: none;"></span>
-        </div>
-        
-        <div class="delivery-checkbox" id="delivery-wrap" style="display: none;">
-            <label style="cursor: pointer;">
-                <input type="checkbox" id="addDeliveryCost" checked> 
-                Включить доставку от поставщиков нанесения
-            </label>
-            <span id="deliverySuppliersSummary" style="font-size: 11px; color: #666; margin-left: 10px;"></span>
+            <span id="allServicesCostBadge" class="cost-badge" style="display: none; margin-left: 0;"></span>
         </div>
     </div>
 
@@ -137,7 +129,7 @@
         <div class="delivery-checkbox">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="ppAddDelivery" checked> 
-                Включить доставку
+                Включить доставку (2 000 ₸)
             </label>
         </div>
         
@@ -403,7 +395,7 @@
 
 <script type="text/javascript">
 var currentMode = 'order'; 
-var activeServices = []; // Множественные нанесения
+var activeServices = []; 
 var kpItems = []; 
 
 // Каталог услуг
@@ -507,6 +499,10 @@ function calculateExclusiveItem(serviceType, q, serviceInstance) {
     return Math.round(workCost + clicheCost);
 }
 
+function getSupplierDeliveryCost(supplier) {
+    return (supplier === 'vipline') ? 4000 : 3000;
+}
+
 function colorWords(num) {
     if (num === 1) return 'один цвет';
     if (num === 2) return 'два цвета';
@@ -521,23 +517,22 @@ function renderServicesList() {
     if (activeServices.length === 0) {
         $('#addServiceRow').show();
         $('#btn-show-add-service').hide();
-        $('#delivery-wrap').hide();
         $('#allServicesCostBadge').hide();
         return;
     }
 
-    let q = Number($('input[name="C5"]:visible').val()) || 1;
+    let q = Number($('tr.row-order input[name="C5"]').val()) || Number($('input[name="C5"]:visible').val()) || T.C5 || 1;
     let markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;
 
     activeServices.forEach((s, idx) => {
         let rawCost = s.fn(q, s);
         let badgeHtml = '';
         if (s.vat) {
-            badgeHtml = `Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`;
+            badgeHtml = `Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (за ${q} шт с НДС)`;
         } else {
             let f4_m = markup * 1.16;
             let realExp = Math.round(rawCost + (rawCost * f4_m * 16 / 116));
-            badgeHtml = `Расход: <strong>${realExp.toLocaleString('ru-RU')} ₸</strong> (прайс ${rawCost.toLocaleString('ru-RU')} без НДС)`;
+            badgeHtml = `Расход: <strong>${realExp.toLocaleString('ru-RU')} ₸</strong> (за ${q} шт, прайс ${rawCost.toLocaleString('ru-RU')} без НДС)`;
         }
 
         let extraParamsHtml = '';
@@ -573,6 +568,16 @@ function renderServicesList() {
             `;
         }
 
+        let deliveryCost = getSupplierDeliveryCost(s.supplier);
+        let deliveryHtml = `
+            <div class="delivery-checkbox">
+                <label style="cursor: pointer;">
+                    <input type="checkbox" class="srv-delivery" data-id="${s.uid}" ${s.addDelivery ? 'checked' : ''}>
+                    Включить доставку для этой услуги (+${deliveryCost.toLocaleString('ru-RU')} ₸)
+                </label>
+            </div>
+        `;
+
         $container.append(`
             <div class="service-card" data-id="${s.uid}">
                 <div class="service-card-header">
@@ -583,11 +588,11 @@ function renderServicesList() {
                     <button type="button" class="btn-remove-service" data-id="${s.uid}" style="color: #dc3545; background: none; border: none; font-size: 16px; cursor: pointer;" title="Удалить это нанесение">✖</button>
                 </div>
                 ${extraParamsHtml}
+                ${deliveryHtml}
             </div>
         `);
     });
 
-    $('#delivery-wrap').show();
     $('#btn-show-add-service').show();
     $('#addServiceRow').hide();
     $('#serviceSearch').val('');
@@ -630,6 +635,7 @@ $(document).ready(function() {
         
         $('.row-sklad, .row-propaket, #propaket-panel, #propaket-kp-block').hide();
         $('#main-supplier-panel, .row-order, .row-shared').show();
+        renderServicesList();
         calc();
     });
 
@@ -781,7 +787,7 @@ $(document).ready(function() {
 
     // --- УМНЫЙ ПОИСК ДЛЯ ДОБАВЛЕНИЯ НАНЕСЕНИЙ ---
     $('#serviceSearch').on('input focus', function() {
-        let q = Number($('input[name="C5"]:visible').val()) || 1;
+        let q = Number($('tr.row-order input[name="C5"]').val()) || Number($('input[name="C5"]:visible').val()) || T.C5 || 1;
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#searchResults');
         let markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;
@@ -812,9 +818,9 @@ $(document).ready(function() {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
                 displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
-                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (прайс ${rawCost.toLocaleString('ru-RU')} без НДС)`;
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (за ${q} шт, прайс ${rawCost.toLocaleString('ru-RU')} без НДС)`;
             } else {
-                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`;
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (за ${q} шт с НДС)`;
             }
 
             $res.append(`
@@ -837,7 +843,8 @@ $(document).ready(function() {
                 clicheExists: false,
                 clicheW: 50,
                 clicheH: 50,
-                dtfPoints: [{ w: 100, h: 100 }]
+                dtfPoints: [{ w: 100, h: 100 }],
+                addDelivery: true // Доставка включена по умолчанию
             };
             activeServices.push(newInstance);
             renderServicesList();
@@ -887,9 +894,9 @@ $(document).ready(function() {
             let card = $(this).closest('.service-card');
             s.clicheW = Number(card.find('.srv-cliche-w').val()) || 0;
             s.clicheH = Number(card.find('.srv-cliche-h').val()) || 0;
+            calc();
             let area = ((s.clicheW + 10) * (s.clicheH + 10)) / 100;
             card.find('span:contains("см²")').text(`(${area.toFixed(1)} см²)`);
-            calc();
         }
     });
 
@@ -924,6 +931,23 @@ $(document).ready(function() {
             s.dtfPoints[pidx].w = Number(card.find(`.srv-dtf-w[data-pidx="${pidx}"]`).val()) || 0;
             s.dtfPoints[pidx].h = Number(card.find(`.srv-dtf-h[data-pidx="${pidx}"]`).val()) || 0;
             calc();
+        }
+    });
+
+    // Индивидуальный чекбокс доставки нанесения
+    $(document).on('change', '.srv-delivery', function() {
+        let uid = $(this).data('id');
+        let s = activeServices.find(it => it.uid === uid);
+        if (s) {
+            s.addDelivery = $(this).is(':checked');
+            calc();
+        }
+    });
+
+    // Перерисовка карточек при смене тиража или накрутки
+    $('tr.row-order input[name="C5"], tr.row-order input[name="markup"]').on('input change keyup', function() {
+        if (currentMode === 'order' && activeServices.length > 0) {
+            renderServicesList();
         }
     });
 
@@ -996,32 +1020,28 @@ function calc() {
     } 
     // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА (МНОЖЕСТВЕННЫЕ НАНЕСЕНИЯ) ---
     else if (currentMode === 'order' && activeServices.length > 0) {
-        let usedSuppliers = new Set();
+        let totalDeliveryCash = 0;
 
         activeServices.forEach(s => {
             let rawCost = s.fn(quantity, s);
-            usedSuppliers.add(s.supplier);
 
             if (s.vat) {
                 supplierCostWithVat += rawCost;
             } else {
                 supplierCostWithoutVat += rawCost;
             }
+
+            if (s.addDelivery) {
+                totalDeliveryCash += getSupplierDeliveryCost(s.supplier);
+            }
         });
 
-        if ($('#addDeliveryCost').is(':checked')) {
-            usedSuppliers.forEach(sup => {
-                autoCashExpense += (sup === 'vipline') ? 4000 : 3000;
-            });
-            let summaryText = Array.from(usedSuppliers).map(sup => `${sup.toUpperCase()} (${sup === 'vipline' ? '4 000' : '3 000'}₸)`).join(' + ');
-            $('#deliverySuppliersSummary').text(`Включено: ${summaryText}`);
-        } else {
-            $('#deliverySuppliersSummary').text('');
-        }
+        autoCashExpense += totalDeliveryCash;
 
         let f4_markup = markup * 1.16;
         let totalDisplayCost = Math.round(supplierCostWithVat + supplierCostWithoutVat + (supplierCostWithoutVat * f4_markup * 16 / 116));
-        $('#allServicesCostBadge').html(`Всего нанесения: <strong>${totalDisplayCost.toLocaleString('ru-RU')} ₸</strong> (${activeServices.length} шт)`).show();
+        let deliveryNotice = totalDeliveryCash > 0 ? ` + доставка ${totalDeliveryCash.toLocaleString('ru-RU')} ₸` : '';
+        $('#allServicesCostBadge').html(`Всего нанесения: <strong>${totalDisplayCost.toLocaleString('ru-RU')} ₸</strong> (${activeServices.length} шт)${deliveryNotice}`).show();
     } else {
         $('#allServicesCostBadge').hide();
     }
