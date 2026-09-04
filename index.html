@@ -45,7 +45,6 @@
             vertical-align: middle;
         }
 
-        /* Стили кнопок и КП */
         .btn-success { background-color: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-success:hover { background-color: #218838; }
         .btn-primary { background-color: #007bff; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -149,60 +148,67 @@
     </div>
 
     <!-- ПАНЕЛЬ ПОИСКА И НАСТРОЙКИ PROPAKET -->
-<div class="supplier-panel" id="propaket-panel">
-    <strong style="display: block; margin-bottom: 12px;">Поиск и выбор продукции PROPAKET:</strong>
-    
-    <div style="margin-bottom: 15px; position: relative;">
-        <span style="display: inline-block; width: 110px;">Товар / тип:</span>
-        <div class="search-box-wrap">
-            <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, лента, маечка)..." autocomplete="off">
-            <div id="ppSearchResults" class="search-results"></div>
-        </div>
-        <button type="button" id="clearSearch" style="padding: 5px 10px; margin-left: 8px; display: none; cursor: pointer;">✖ Сброс</button>
-    </div>
-
-    <div id="sizeRow" style="margin-bottom: 15px; display: none;">
-        <span style="display: inline-block; width: 110px;">Размер:</span>
-        <select id="ppSize" style="min-width: 500px;"></select>
-    </div>
-
-    <div id="colorRow" style="margin-bottom: 15px; display: none;">
-        <span id="frontColorLabel" style="display: inline-block; width: 160px;">Цветов спереди (1-3):</span>
-        <input type="number" id="ppFront" value="1" min="1" max="3" class="mm-input" style="margin-right: 20px;">
+    <div class="supplier-panel" id="propaket-panel" style="display: none;">
+        <strong style="display: block; margin-bottom: 12px;">Поиск и выбор продукции PROPAKET:</strong>
         
-        <span id="backColorsWrap">
-            <span>Цветов сзади (0-3):</span>
-            <input type="number" id="ppBack" value="0" min="0" max="3" class="mm-input">
-        </span>
-        <span id="ribbonColorNotice" style="display: none; color: #555; font-style: italic;">Печать в 1 цвет (включена в цену прайса)</span>
-    </div>
+        <div style="margin-bottom: 15px; position: relative;">
+            <span style="display: inline-block; width: 110px;">Товар / тип:</span>
+            <div class="search-box-wrap">
+                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, лента, маечка)..." autocomplete="off">
+                <div id="ppSearchResults" class="search-results"></div>
+            </div>
+            <button type="button" id="clearSearch" style="padding: 5px 10px; margin-left: 8px; display: none; cursor: pointer;">✖ Сброс</button>
+        </div>
 
-    <!-- Опция печати изнутри для коробок -->
-    <div id="boxPrintRow" style="margin-bottom: 15px; display: none; padding-top: 10px; border-top: 1px dashed #cce5ff;">
-        <span style="display: inline-block; width: 170px; font-weight: bold;">Печать изнутри коробки:</span>
-        <select id="ppBoxInside" style="min-width: 380px;">
-            <option value="none">Без печати изнутри (печать только на крышке снаружи)</option>
-            <option value="same">Печать изнутри (тот же дизайн, размер и цвет) (+45 ₸/шт)</option>
-            <option value="diff">Печать изнутри (другой дизайн / размер) (+90 ₸/шт)</option>
-        </select>
-    </div>
+        <div id="sizeRow" style="margin-bottom: 15px; display: none;">
+            <span style="display: inline-block; width: 110px;">Размер:</span>
+            <select id="ppSize" style="min-width: 500px;"></select>
+        </div>
 
-    <!-- Доп. опции (ручки и бант) для бумажных пакетов -->
-    <div id="extraOptionsRow" style="margin-bottom: 15px; padding-top: 10px; border-top: 1px dashed #cce5ff; display: none;">
-        <span style="display: inline-block; width: 110px; font-weight: bold;">Доп. опции:</span>
-        <label class="option-label">
-            <input type="checkbox" id="optHandle"> Замена ручек (+100 ₸/шт)
-        </label>
-        <label class="option-label">
-            <input type="checkbox" id="optBow"> Бант (вырез и лента) (+100 ₸/шт)
-        </label>
+        <div id="colorRow" style="margin-bottom: 15px; display: none;">
+            <span id="frontColorLabel" style="display: inline-block; width: 160px;">Цветов спереди (1-3):</span>
+            <input type="number" id="ppFront" value="1" min="1" max="3" class="mm-input" style="margin-right: 20px;">
+            
+            <span id="backColorsWrap">
+                <span>Цветов сзади (0-3):</span>
+                <input type="number" id="ppBack" value="0" min="0" max="3" class="mm-input">
+            </span>
+            <span id="ribbonColorNotice" style="display: none; color: #555; font-style: italic;">Печать в 1 цвет (включена в цену прайса)</span>
+        </div>
+
+        <!-- Опция печати изнутри для коробок -->
+        <div id="boxPrintRow" style="margin-bottom: 15px; display: none; padding-top: 10px; border-top: 1px dashed #cce5ff;">
+            <span style="display: inline-block; width: 170px; font-weight: bold;">Печать изнутри коробки:</span>
+            <select id="ppBoxInside" style="min-width: 380px;">
+                <option value="none">Без печати изнутри (печать только на крышке снаружи)</option>
+                <option value="same">Печать изнутри (тот же дизайн, размер и цвет) (+45 ₸/шт)</option>
+                <option value="diff">Печать изнутри (другой дизайн / размер) (+90 ₸/шт)</option>
+            </select>
+        </div>
+
+        <!-- Доп. опции (ручки и бант) для бумажных пакетов -->
+        <div id="extraOptionsRow" style="margin-bottom: 15px; padding-top: 10px; border-top: 1px dashed #cce5ff; display: none;">
+            <span style="display: inline-block; width: 110px; font-weight: bold;">Доп. опции:</span>
+            <label class="option-label">
+                <input type="checkbox" id="optHandle"> Замена ручек (+100 ₸/шт)
+            </label>
+            <label class="option-label">
+                <input type="checkbox" id="optBow"> Бант (вырез и лента) (+100 ₸/шт)
+            </label>
+        </div>
+        
+        <div class="delivery-checkbox" style="margin-top: 10px;">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="ppAddDelivery" checked> 
+                Включить доставку (3 000 ₸)
+            </label>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 15px; margin-top: 12px;">
+            <span id="ppCostBadge" class="cost-badge" style="display: none;"></span>
+            <button type="button" id="btn-add-kp" class="btn-success" style="display: none;">+ Добавить в спецификацию</button>
+        </div>
     </div>
-    
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <span id="ppCostBadge" class="cost-badge" style="display: none;"></span>
-        <button type="button" id="btn-add-kp" class="btn-success" style="display: none;">+ Добавить в спецификацию</button>
-    </div>
-</div>
 
     <table>
         <tbody>
@@ -307,7 +313,7 @@
             <!-- РЯД PROPAKET 1: Тираж и Накрутка -->
             <tr class="row-propaket" style="display: none;">
                 <td>Тираж</td>
-                <td><input name="C5" value="100" type="text">шт.</td>
+                <td><input name="C5" value="100" type="text">шт. (м.)</td>
                 <td></td>
                 <td>Накрутка</td>
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25)</td>
@@ -461,6 +467,7 @@
 var currentMode = 'order'; 
 var activeService = null; 
 var activeService2 = null; 
+var selectedProduct = null;
 var kpItems = []; 
 
 // Каталог услуг для умного поиска
@@ -491,11 +498,11 @@ const servicesCatalog = [
     { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники vipline виплайн', name: 'УФ: Ежедневники, блокноты [VIPLINE]', fn: (q) => getViplineDirect('uv', 'diaries', q) },
     { id: 'vip_uv_powerbanks', supplier: 'vipline', vat: false, keywords: 'уф печать флешки визитки powerbank повербанки vipline виплайн', name: 'УФ: Флешки-визитки, повербанки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'powerbanks', q) },
     { id: 'vip_silk_light_1', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 1 цвет виплайн vipline', name: 'Шелкография: Светлые футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_1') },
-    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
+    { id: 'vip_silk_light_2', supplier: 'vipline', vat: false, keywords: 'шелкография светлые футболки 2 цвета виплайн vipline', name: 'Шелкография: Светлые футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'light', q, 'colors_2') },
     { id: 'vip_silk_dark_1', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 1 цвет виплайн vipline', name: 'Шелкография: Темные футболки (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_1') },
     { id: 'vip_silk_dark_2', supplier: 'vipline', vat: false, keywords: 'шелкография темные футболки 2 цвета виплайн vipline', name: 'Шелкография: Темные футболки (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'dark', q, 'colors_2') },
     { id: 'vip_silk_lanyards_1', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 1 цвет vipline', name: 'Шелкография: Ланьярды (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_1') },
-    { id: 'vip_silk_lanyards_2', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 2 цвета vipline', name: 'Шелкография: Ланьярды (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_2') },
+    { id: 'vip_silk_lanyards_2', supplier: 'vipline', vat: false, keywords: 'шелкография ланьярд шнур бейдж 2 цвета виплайн vipline', name: 'Шелкография: Ланьярды (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'lanyards', q, 'colors_2') },
     { id: 'vip_silk_bags_1', supplier: 'vipline', vat: false, keywords: 'шелкография пакеты полиэтиленовые 1 цвет vipline', name: 'Шелкография: Пакеты ПВД (1 цвет) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'bags', q, 'colors_1') },
     { id: 'vip_silk_bags_2', supplier: 'vipline', vat: false, keywords: 'шелкография пакеты полиэтиленовые 2 цвета vipline', name: 'Шелкография: Пакеты ПВД (2 цвета) [VIPLINE]', fn: (q) => getViplineDirect('silkscreen', 'bags', q, 'colors_2') },
     { id: 'vip_dtf_caps', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf бейсболки кепки виплайн vipline', name: 'ДТФ: Бейсболки (стандарт) [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'caps', q) },
@@ -541,7 +548,6 @@ function calcDtfArea(q) {
     return Math.round(singleCost * q);
 }
 
-// Расчет стоимости для второго нанесения
 function getService2Cost(q) {
     if (!activeService2) return 0;
     if (activeService2.isCliche) {
@@ -610,108 +616,6 @@ const deliveryPriority = {
 // ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ
 // ==============================================================
 $(document).ready(function() {
-    // --- ИНИЦИАЛИЗАЦИЯ PROPAKET ИЗ ТЕСТИРОВАННОГО КАТАЛОГА ---
-    function initPropaketCatalogUI() {
-        let $ppType = $('#ppType');
-        $ppType.empty();
-        
-        if (typeof propaketCatalog !== 'undefined' && Array.isArray(propaketCatalog)) {
-            propaketCatalog.forEach(item => {
-                $ppType.append(new Option(item.name, item.id));
-            });
-        } else if (typeof propaketData !== 'undefined') {
-            for (let key in propaketData) {
-                $ppType.append(new Option(propaketData[key].name, key));
-            }
-        }
-        updatePpSizes();
-    }
-
-    function updatePpSizes() {
-        let typeId = $('#ppType').val();
-        let $size = $('#ppSize');
-        $size.empty();
-
-        if (typeof propaketCatalog !== 'undefined' && Array.isArray(propaketCatalog)) {
-            let product = propaketCatalog.find(p => p.id === typeId);
-            if (product && product.sizes) {
-                for (let sizeKey in product.sizes) {
-                    let m = product.sizes[sizeKey];
-                    let label = sizeKey;
-                    let parenMatch = sizeKey.match(/\((.+)\)/);
-                    let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
-
-                    if (product.id === 'boxes') {
-                        label = `Длина: ${m.w} x Ширина: ${m.h} x Глубина: ${m.d} мм${extraNote}`;
-                    } else if (product.id === 'ribbons' || product.id === 'tissue') {
-                        label = sizeKey;
-                    } else if (m.d > 0) {
-                        label = `Ш:${m.w} x В:${m.h} x Г:${m.d} мм${extraNote}`;
-                    } else if (m.w && m.h) {
-                        label = `Ш:${m.w} x В:${m.h} мм${extraNote}`;
-                    }
-                    $size.append(new Option(label, sizeKey));
-                }
-
-                $('tr.row-propaket input[name="C5"]').val(product.defaultQty || 100);
-
-                if (product.id === 'ribbons') {
-                    $('#ppFrontLabel').text('Цветов:');
-                    $('#ppFront').val(1).prop('disabled', true).hide();
-                    $('#ppBackWrap').hide();
-                    $('#ppBack').val(0);
-                    $('#ribbonColorNotice').show();
-                } else if (product.id === 'boxes') {
-                    $('#ppFrontLabel').text('Цветов на крышке (1-3):');
-                    $('#ppFront').val(1).prop('disabled', false).show();
-                    $('#ppBackWrap').hide();
-                    $('#ppBack').val(0);
-                    $('#ribbonColorNotice').hide();
-                } else if (product.maxColors <= 1) {
-                    $('#ppFrontLabel').text('Цветов спереди:');
-                    $('#ppFront').val(1).prop('disabled', true).show();
-                    $('#ppBackWrap').hide();
-                    $('#ppBack').val(0);
-                    $('#ribbonColorNotice').hide();
-                } else {
-                    $('#ppFrontLabel').text('Цветов спереди (1-3):');
-                    $('#ppFront').val(1).prop('disabled', false).show();
-                    $('#ppBackWrap').show();
-                    $('#ribbonColorNotice').hide();
-                }
-
-                if (product.id === 'boxes') {
-                    $('#boxPrintRow').show();
-                } else {
-                    $('#boxPrintRow').hide();
-                    $('#ppBoxInside').val('none');
-                }
-
-                const paperBags = ['paper_white_black', 'paper_color', 'paper_square', 'paper_fullcolor'];
-                if (paperBags.includes(product.id)) {
-                    $('#extraOptionsRow').show();
-                } else {
-                    $('#extraOptionsRow').hide();
-                    $('#optHandle, #optBow').prop('checked', false);
-                }
-            }
-        } else if (typeof propaketData !== 'undefined' && propaketData[typeId]) {
-            for (let sizeKey in propaketData[typeId].sizes) {
-                let m = propaketData[typeId].sizes[sizeKey];
-                let label = (m.d > 0) 
-                    ? `Ш:${m.w} x В:${m.h} x Г:${m.d} мм (${m.orient})`
-                    : `Ш:${m.w} x В:${m.h} мм (${m.orient})`;
-                $size.append(new Option(label, sizeKey));
-            }
-            let isPaper = (typeId === 'paper' || typeId === 'paper_color');
-            $('tr.row-propaket input[name="C5"]').val(isPaper ? 24 : 100);
-        }
-        calc();
-    }
-
-    $('#ppType').change(updatePpSizes);
-    initPropaketCatalogUI();
-
     // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ---
     $('#btn-order').click(function() {
         currentMode = 'order';
@@ -743,85 +647,227 @@ $(document).ready(function() {
         
         $('#main-supplier-panel, #second-supplier-panel, .row-order, .row-sklad').hide();
         $('#propaket-panel, .row-propaket, .row-shared').show();
-        renderKpTable(); 
+        if (kpItems.length > 0) {
+            $('#propaket-kp-block').show();
+        }
+        calc();
+    });
+
+    // --- УМНЫЙ ПОИСК PROPAKET ---
+    $('#ppSearch').on('input focus', function() {
+        let query = $(this).val().toLowerCase().trim();
+        let $res = $('#ppSearchResults');
+        $res.empty();
+
+        if (query.length === 0) {
+            $res.hide();
+            return;
+        }
+
+        if (typeof propaketCatalog !== 'undefined') {
+            let matches = propaketCatalog.filter(item => {
+                let words = query.split(' ');
+                return words.every(w => item.keywords.toLowerCase().includes(w) || item.name.toLowerCase().includes(w));
+            });
+
+            if (matches.length === 0) {
+                $res.append('<div class="search-item" style="color: #888;">Ничего не найдено</div>').show();
+                return;
+            }
+
+            matches.forEach(item => {
+                $res.append(`
+                    <div class="search-item" data-id="${item.id}">
+                        <strong>${item.name}</strong>
+                    </div>
+                `);
+            });
+            $res.show();
+        }
+    });
+
+    $(document).on('click', '#ppSearchResults .search-item', function() {
+        let id = $(this).data('id');
+        if (typeof propaketCatalog !== 'undefined') {
+            selectedProduct = propaketCatalog.find(p => p.id === id);
+        }
+
+        if (selectedProduct) {
+            $('#ppSearch').val(selectedProduct.name);
+            $('#ppSearchResults').hide();
+            $('#clearSearch').show();
+
+            let $size = $('#ppSize');
+            $size.empty();
+            for (let sizeKey in selectedProduct.sizes) {
+                let m = selectedProduct.sizes[sizeKey];
+                let label = sizeKey;
+                let parenMatch = sizeKey.match(/\((.+)\)/);
+                let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
+
+                if (selectedProduct.id === 'boxes') {
+                    label = `Длина: ${m.w} мм x Ширина: ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                } else if (selectedProduct.id === 'ribbons' || selectedProduct.id === 'tissue') {
+                    label = sizeKey;
+                } else if (m.d > 0) {
+                    label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                } else if (m.w && m.h) {
+                    label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм${extraNote}`;
+                }
+                $size.append(new Option(label, sizeKey));
+            }
+
+            $('#sizeRow').show();
+            $('#colorRow').show();
+
+            if (selectedProduct.id === 'ribbons') {
+                $('#frontColorLabel').text('Цветов:');
+                $('#ppFront').val(1).prop('disabled', true).hide();
+                $('#backColorsWrap').hide();
+                $('#ppBack').val(0);
+                $('#ribbonColorNotice').show();
+            } else if (selectedProduct.id === 'boxes') {
+                $('#frontColorLabel').text('Цветов на крышке (1-3):');
+                $('#ppFront').val(1).prop('disabled', false).show();
+                $('#backColorsWrap').hide();
+                $('#ppBack').val(0);
+                $('#ribbonColorNotice').hide();
+            } else if (selectedProduct.maxColors <= 1) {
+                $('#frontColorLabel').text('Цветов спереди:');
+                $('#ppFront').val(1).prop('disabled', true).show();
+                $('#backColorsWrap').hide();
+                $('#ppBack').val(0);
+                $('#ribbonColorNotice').hide();
+            } else {
+                $('#frontColorLabel').text('Цветов спереди (1-3):');
+                $('#ppFront').val(1).prop('disabled', false).show();
+                $('#backColorsWrap').show();
+                $('#ppBack').val(0);
+                $('#ribbonColorNotice').hide();
+            }
+
+            if (selectedProduct.id === 'boxes') {
+                $('#boxPrintRow').show();
+                $('#ppBoxInside').val('none');
+            } else {
+                $('#boxPrintRow').hide();
+                $('#ppBoxInside').val('none');
+            }
+
+            const paperBags = ['paper_white_black', 'paper_color', 'paper_square', 'paper_fullcolor'];
+            if (paperBags.includes(selectedProduct.id)) {
+                $('#extraOptionsRow').show();
+            } else {
+                $('#extraOptionsRow').hide();
+                $('#optHandle, #optBow').prop('checked', false);
+            }
+
+            $('tr.row-propaket input[name="C5"]').val(selectedProduct.defaultQty || 100);
+            calc();
+        }
+    });
+
+    $('#clearSearch').click(function() {
+        selectedProduct = null;
+        $('#ppSearch').val('');
+        $('#clearSearch, #sizeRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
+        $('#optHandle, #optBow').prop('checked', false);
+        $('#ppBoxInside').val('none');
+        calc();
+    });
+
+    $('#ppSize, #optHandle, #optBow, #ppBoxInside, #ppAddDelivery').change(calc);
+
+    $('#ppFront, #ppBack').on('change', function() {
+        if (!selectedProduct) return;
+        let val = parseInt($(this).val()) || 0;
+        let isFront = $(this).attr('id') === 'ppFront';
+        let min = isFront ? 1 : 0;
+        if (val < min) $(this).val(min);
+        if (val > selectedProduct.maxColors) $(this).val(selectedProduct.maxColors);
+
+        if (selectedProduct.id === 'mayechka') {
+            let totColors = (parseInt($('#ppFront').val()) || 1) + (parseInt($('#ppBack').val()) || 0);
+            let currentQty = Number($('tr.row-propaket input[name="C5"]').val()) || 0;
+            if (totColors >= 3 && currentQty < 30000) {
+                $('tr.row-propaket input[name="C5"]').val(30000);
+            } else if (totColors < 3 && currentQty === 30000) {
+                $('tr.row-propaket input[name="C5"]').val(10000);
+            }
+        }
         calc();
     });
 
     // --- ДОБАВЛЕНИЕ В СПЕЦИФИКАЦИЮ КП PROPAKET ---
     $('#btn-add-kp').click(function() {
-        let typeId = $('#ppType').val();
+        if (!selectedProduct) return;
+
         let sizeKey = $('#ppSize').val();
+        let meta = selectedProduct.sizes[sizeKey];
         let qty = Number($('tr.row-propaket input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
-        
+
         let frontColors = parseInt($('#ppFront').val()) || 1;
         let backColors = parseInt($('#ppBack').val()) || 0;
         let boxInside = $('#ppBoxInside').val();
 
         let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
         let totalColors = frontColors + backColors;
+        let orientStr = meta && meta.orient ? meta.orient : '';
+        let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : sizeKey;
 
         let itemTitle = '';
-        let descHtml = '';
-        let deliveryDays = getDeliveryDays(qty);
-
-        if (typeof propaketCatalog !== 'undefined') {
-            let product = propaketCatalog.find(p => p.id === typeId);
-            let meta = product?.sizes[sizeKey];
-            let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : sizeKey;
-            let orientStr = meta && meta.orient ? meta.orient : '';
-
-            if (product.id === 'ribbons') {
-                itemTitle = `Полиграфические услуги - ${product.name} - печать в 1 цвет`;
-            } else if (product.id === 'boxes') {
-                let insideTitleAdd = (boxInside === 'same') ? ' + печать изнутри (тот же дизайн)' : (boxInside === 'diff' ? ' + печать изнутри (новый дизайн)' : '');
-                itemTitle = `Полиграфические услуги - ${product.name} - нанесение на крышку (${colorDeclension(frontColors)})${insideTitleAdd} ${dimStr}`;
-            } else if (product.id === 'paper_fullcolor') {
-                itemTitle = `Полиграфические услуги - ${product.name} ${orientStr} нанесение - полноцвет, ${sidesCount} ${dimStr}`;
-            } else {
-                itemTitle = `Полиграфические услуги - ${product.name} ${orientStr} нанесение - ${colorDeclension(totalColors)}, ${sidesCount} ${dimStr}`;
-            }
-
-            let dimLabel = '';
-            let parenMatch = sizeKey.match(/\((.+)\)/);
-            let variantNote = parenMatch ? ` (${parenMatch[1]})` : '';
-
-            if (product.id === 'boxes') {
-                dimLabel = `Размер: Длина ${meta.w} мм, Ширина ${meta.h} мм, Глубина (высота) ${meta.d} мм${variantNote}`;
-            } else if (product.id === 'ribbons') {
-                dimLabel = `Параметры: ${sizeKey}`;
-            } else if (product.id === 'tissue') {
-                dimLabel = `Размер: Ширина ${meta.w} мм, Длина ${meta.h} мм${variantNote}`;
-            } else if (meta && meta.d > 0) {
-                dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм, Глубина ${meta.d} мм${variantNote}`;
-            } else if (meta) {
-                dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм${variantNote}`;
-            } else {
-                dimLabel = `Размер: ${sizeKey}`;
-            }
-
-            let printText = '';
-            if (product.id === 'ribbons') {
-                printText = `печать логотипа в 1 цвет (включена в цену прайса), метод роторной/шелкотрафаретной печати`;
-            } else if (product.id === 'boxes') {
-                printText = `нанесение на крышку снаружи в ${colorWords(frontColors)} методом шелкографии`;
-                if (boxInside === 'same') printText += `<br><i>Печать изнутри: тот же дизайн и цвет (+45 ₸/шт)</i>`;
-                else if (boxInside === 'diff') printText += `<br><i>Печать изнутри: другой дизайн / размер (+90 ₸/шт)</i>`;
-            } else if (product.id === 'paper_fullcolor') {
-                printText = `нанесение: полноцветная печать CMYK (${sidesCount})`;
-            } else {
-                printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
-                if (backColors > 0) printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
-            }
-
-            let extraText = [];
-            if ($('#optHandle').is(':checked')) extraText.push('замена ручек (+100 ₸)');
-            if ($('#optBow').is(':checked')) extraText.push('бант (+100 ₸)');
-            if (extraText.length > 0) printText += `<br><i>Доп. опции: ${extraText.join(', ')}</i>`;
-
-            descHtml = `${dimLabel}<br>${printText}`;
+        if (selectedProduct.id === 'ribbons') {
+            itemTitle = `Полиграфические услуги - ${selectedProduct.name} - печать в 1 цвет`;
+        } else if (selectedProduct.id === 'boxes') {
+            let insideTitleAdd = (boxInside === 'same') ? ' + печать изнутри (тот же дизайн)' : (boxInside === 'diff' ? ' + печать изнутри (новый дизайн)' : '');
+            itemTitle = `Полиграфические услуги - ${selectedProduct.name} - нанесение на крышку (${colorDeclension(frontColors)})${insideTitleAdd} ${dimStr}`;
+        } else if (selectedProduct.id === 'paper_fullcolor') {
+            itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - полноцвет, ${sidesCount} ${dimStr}`;
+        } else {
+            itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - ${colorDeclension(totalColors)}, ${sidesCount} ${dimStr}`;
         }
+
+        let dimLabel = '';
+        let parenMatch = sizeKey.match(/\((.+)\)/);
+        let variantNote = parenMatch ? ` (${parenMatch[1]})` : '';
+
+        if (selectedProduct.id === 'boxes') {
+            dimLabel = `Размер: Длина ${meta.w} мм, Ширина ${meta.h} мм, Глубина (высота) ${meta.d} мм${variantNote}`;
+        } else if (selectedProduct.id === 'ribbons') {
+            dimLabel = `Параметры: ${sizeKey}`;
+        } else if (selectedProduct.id === 'tissue') {
+            dimLabel = `Размер: Ширина ${meta.w} мм, Длина ${meta.h} мм${variantNote}`;
+        } else if (meta && meta.d > 0) {
+            dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм, Глубина ${meta.d} мм${variantNote}`;
+        } else if (meta) {
+            dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм${variantNote}`;
+        } else {
+            dimLabel = `Размер: ${sizeKey}`;
+        }
+
+        let printText = '';
+        if (selectedProduct.id === 'ribbons') {
+            printText = `печать логотипа в 1 цвет (включена в цену прайса), метод роторной/шелкотрафаретной печати`;
+        } else if (selectedProduct.id === 'boxes') {
+            printText = `нанесение на крышку снаружи в ${colorWords(frontColors)} методом шелкографии`;
+            if (boxInside === 'same') printText += `<br><i>Печать изнутри: тот же дизайн и цвет (+45 ₸/шт)</i>`;
+            else if (boxInside === 'diff') printText += `<br><i>Печать изнутри: другой дизайн / размер (+90 ₸/шт)</i>`;
+        } else if (selectedProduct.id === 'paper_fullcolor') {
+            printText = `нанесение: полноцветная печать CMYK (${sidesCount})`;
+        } else {
+            printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
+            if (backColors > 0) printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
+        }
+
+        let extraText = [];
+        if ($('#optHandle').is(':checked')) extraText.push('замена ручек (+100 ₸)');
+        if ($('#optBow').is(':checked')) extraText.push('бант (+100 ₸)');
+        if (extraText.length > 0) printText += `<br><i>Доп. опции: ${extraText.join(', ')}</i>`;
+
+        let descHtml = `${dimLabel}<br>${printText}`;
+        let deliveryDays = getDeliveryDays(qty);
 
         kpItems.push({
             id: Date.now() + Math.random(),
@@ -896,13 +942,13 @@ $(document).ready(function() {
             
             tbody.append(`
                 <tr>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${idx + 1}</td>
-                    <td align="left" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: left; vertical-align: middle;"><strong>${item.title}</strong></td>
-                    <td valign="top" style="border: 1px solid #000; padding: 6px; vertical-align: top;">${item.desc}</td>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.qty}</td>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.unit}</td>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;"><strong>${item.total.toLocaleString('ru-RU')}</strong></td>
-                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle;">${item.delivery}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center;">${idx + 1}</td>
+                    <td align="left" valign="middle" style="border: 1px solid #000; padding: 6px;"><strong>${item.title}</strong></td>
+                    <td valign="top" style="border: 1px solid #000; padding: 6px;">${item.desc}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center;">${item.qty}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center;">${item.unit}</td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center;"><strong>${item.total.toLocaleString('ru-RU')}</strong></td>
+                    <td align="center" valign="middle" style="border: 1px solid #000; padding: 6px; text-align: center;">${item.delivery}</td>
                 </tr>
             `);
 
@@ -1067,11 +1113,11 @@ $(document).ready(function() {
 
     $(document).click(function(e) {
         if (!$(e.target).closest('.search-box-wrap').length) {
-            $('#searchResults, #searchResults2').hide();
+            $('#searchResults, #searchResults2, #ppSearchResults').hide();
         }
     });
 
-    // ДТФ точки 1 и 2
+    // ДТФ и клише точки
     $('#addDtfPoint').click(function() {
         $('#dtf-points').append(`
             <span class="dtf-point" style="margin-left: 5px;">
@@ -1102,7 +1148,6 @@ $(document).ready(function() {
         calc();
     });
 
-    // Клише 1 и 2
     $('#clicheExists').change(function() {
         $('#clicheAreaBlock').css('opacity', $(this).is(':checked') ? '0.4' : '1');
         calc();
@@ -1126,10 +1171,6 @@ $(document).ready(function() {
         $('#clicheAreaOut2').text(`(${area.toFixed(1)} см²)`);
         calc();
     });
-
-    // Слушатели для ProPaket
-    $('#ppSize, #optHandle, #optBow, #ppBoxInside, #ppAddDelivery').change(calc);
-    $('#ppFront, #ppBack').on('input change keyup', calc);
 
     $('input, select').on('input change keyup', () => calc());
     calc();
@@ -1169,31 +1210,24 @@ function calc() {
         origin = 'kazakhstan'; 
         vat = 'withVAT';
         
-        let ppFront = parseInt($('#ppFront').val()) || 1;
-        let ppBack = parseInt($('#ppBack').val()) || 0;
-        let typeId = $('#ppType').val();
-        let sizeKey = $('#ppSize').val();
-        let addHandle = $('#optHandle').is(':checked');
-        let addBow = $('#optBow').is(':checked');
-        let boxInside = $('#ppBoxInside').val();
-
         let itemCost = 0;
         let unitBase = 0;
         let calcQty = quantity;
 
-        if (typeof calculatePropaketItem === 'function' && typeof propaketCatalog !== 'undefined') {
-            let product = propaketCatalog.find(p => p.id === typeId);
-            if (product) {
-                let info = calculatePropaketItem(product, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside);
+        if (selectedProduct) {
+            let sizeKey = $('#ppSize').val();
+            let ppFront = parseInt($('#ppFront').val()) || 1;
+            let ppBack = parseInt($('#ppBack').val()) || 0;
+            let addHandle = $('#optHandle').is(':checked');
+            let addBow = $('#optBow').is(':checked');
+            let boxInside = $('#ppBoxInside').val();
+
+            if (typeof calculatePropaketItem === 'function') {
+                let info = calculatePropaketItem(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside);
                 itemCost = info.cost || 0;
                 unitBase = info.unitPrice || 0;
                 calcQty = info.calcQty || quantity;
             }
-        } else if (typeof calculatePropaket === 'function') {
-            let propaketInfo = calculatePropaket(typeId, sizeKey, quantity, ppFront, ppBack);
-            itemCost = propaketInfo.cost || 0;
-            unitBase = propaketInfo.unitPrice || 0;
-            calcQty = propaketInfo.calcQty || quantity;
         }
 
         if (itemCost > 0) {
@@ -1205,13 +1239,12 @@ function calc() {
             $('#ppCostBadge, #btn-add-kp').hide();
         }
         
-        if ($('#ppAddDelivery').is(':checked')) {
+        if ($('#ppAddDelivery').is(':checked') && itemCost > 0) {
             autoCashExpense += 3000;
         }
     } 
     // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
     else if (currentMode === 'order') {
-        // Нанесение 1
         if (activeService) {
             let rawCost = activeService.fn(quantity);
             if (activeService.vat) {
@@ -1232,7 +1265,6 @@ function calc() {
             $('#selectedServiceCostBadge').hide();
         }
 
-        // Нанесение 2 (дополнительное)
         if (activeService2) {
             let rawCost2 = getService2Cost(quantity);
             if (activeService2.vat) {
@@ -1277,7 +1309,6 @@ function calc() {
     F.F5 = T.F5 * markup;                                        
     R.F4 = T.F4 + (F.F4 * 16 / 116);
 
-    // УПРОЩЕНКА (масштабирование цены под markup с фиксацией в CRM)
     var simpExpenseFactor = 2.90 / 1.35;
     R.F4_simp = T.F4_simp * simpExpenseFactor;
     F.F4_simp = R.F4_simp * markup; 
