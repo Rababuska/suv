@@ -10,6 +10,7 @@
     <script src="kvant.js"></script>
     <script src="kitchen.js"></script>
     <script src="propaket.js"></script>
+    <script src="bannerovo.js"></script>
 
     <style type="text/css">
         input { text-align: right; margin-right: 6px; }
@@ -32,7 +33,19 @@
         }
         .search-item { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #eee; text-align: left; font-size: 12px; }
         .search-item:hover, .search-item.selected { background-color: #007bff; color: #fff; }
+        .search-item:hover .supplier-tag { background-color: #fff; color: #007bff; }
         
+        .supplier-tag {
+            float: right;
+            font-size: 11px;
+            padding: 2px 6px;
+            background: #e2eafc;
+            color: #0056b3;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
         .cost-badge {
             display: inline-block;
             margin-left: 12px;
@@ -52,20 +65,27 @@
         .kp-badge { display: flex; align-items: center; background: #fff; border: 1px solid #ccc; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
         .kp-badge-btn { margin-left: 8px; color: #dc3545; background: none; border: none; font-weight: bold; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; }
         .option-label { cursor: pointer; margin-right: 20px; font-size: 13px; }
+
+        /* Подсветка ошибок ввода */
+        .input-error {
+            border: 1.5px solid #dc3545 !important;
+            background-color: #fff0f1 !important;
+            color: #dc3545 !important;
+        }
     </style>
 </head>
 <body>
     <div class="menu">
         <button type="button" id="btn-order" class="active">ЗАКАЗ</button>
         <button type="button" id="btn-sklad">АЛМАТЫ</button>
-        <button type="button" id="btn-propaket">PROPAKET</button>
+        <button type="button" id="btn-propaket">ПРОДУКЦИЯ / ПАКЕТЫ</button>
     </div>
 
     <!-- ПАНЕЛЬ ОСНОВНОГО ЗАКАЗА (НАНЕСЕНИЕ 1) -->
     <div class="supplier-panel" id="main-supplier-panel">
         <strong>Нанесение 1:</strong>
         <div class="search-box-wrap">
-            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение)..." autocomplete="off">
+            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (баннеры, пленка, роллап, паук, УФ, гравировка)..." autocomplete="off">
             <div id="searchResults" class="search-results"></div>
         </div>
 
@@ -89,6 +109,13 @@
                     </span>
                 </span>
                 <button type="button" id="addDtfPoint" style="font-size: 11px; cursor: pointer;">+ точка</button>
+            </span>
+
+            <span id="bannerovoParams" style="display: none;">
+                Размер печати (мм): 
+                <input type="number" id="bannerW" class="mm-input" style="width: 60px;" value="1000" min="0" step="10"> x 
+                <input type="number" id="bannerH" class="mm-input" style="width: 60px;" value="2000" min="0" step="10">
+                <span id="bannerAreaOut" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 5px;">(2.00 м²)</span>
             </span>
         </div>
         
@@ -137,6 +164,13 @@
                 </span>
                 <button type="button" id="addDtfPoint2" style="font-size: 11px; cursor: pointer;">+ точка</button>
             </span>
+
+            <span id="bannerovoParams2" style="display: none;">
+                Размер печати (мм): 
+                <input type="number" id="bannerW2" class="mm-input" style="width: 60px;" value="1000" min="0" step="10"> x 
+                <input type="number" id="bannerH2" class="mm-input" style="width: 60px;" value="2000" min="0" step="10">
+                <span id="bannerAreaOut2" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 5px;">(2.00 м²)</span>
+            </span>
         </div>
         
         <div class="delivery-checkbox" id="delivery-wrap2" style="display: none;">
@@ -147,14 +181,14 @@
         </div>
     </div>
 
-    <!-- ПАНЕЛЬ ПОИСКА И НАСТРОЙКИ PROPAKET -->
+    <!-- МУЛЬТИВЕНДОРНАЯ ПАНЕЛЬ ПРОДУКЦИИ И УПАКОВКИ -->
     <div class="supplier-panel" id="propaket-panel" style="display: none;">
-        <strong style="display: block; margin-bottom: 12px;">Поиск и выбор продукции PROPAKET:</strong>
+        <strong style="display: block; margin-bottom: 12px;">Поиск и выбор продукции (все поставщики):</strong>
         
         <div style="margin-bottom: 15px; position: relative;">
             <span style="display: inline-block; width: 110px;">Товар / тип:</span>
             <div class="search-box-wrap">
-                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, лента, маечка)..." autocomplete="off">
+                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, лента, майка, поставщик)..." autocomplete="off">
                 <div id="ppSearchResults" class="search-results"></div>
             </div>
             <button type="button" id="clearSearch" style="padding: 5px 10px; margin-left: 8px; display: none; cursor: pointer;">✖ Сброс</button>
@@ -176,7 +210,6 @@
             <span id="ribbonColorNotice" style="display: none; color: #555; font-style: italic;">Печать в 1 цвет (включена в цену прайса)</span>
         </div>
 
-        <!-- Опция печати изнутри для коробок -->
         <div id="boxPrintRow" style="margin-bottom: 15px; display: none; padding-top: 10px; border-top: 1px dashed #cce5ff;">
             <span style="display: inline-block; width: 170px; font-weight: bold;">Печать изнутри коробки:</span>
             <select id="ppBoxInside" style="min-width: 380px;">
@@ -186,7 +219,6 @@
             </select>
         </div>
 
-        <!-- Доп. опции (ручки и бант) для бумажных пакетов -->
         <div id="extraOptionsRow" style="margin-bottom: 15px; padding-top: 10px; border-top: 1px dashed #cce5ff; display: none;">
             <span style="display: inline-block; width: 110px; font-weight: bold;">Доп. опции:</span>
             <label class="option-label">
@@ -200,7 +232,7 @@
         <div class="delivery-checkbox" style="margin-top: 10px;">
             <label style="cursor: pointer;">
                 <input type="checkbox" id="ppAddDelivery" checked> 
-                Включить доставку (3 000 ₸)
+                <span id="ppDeliveryLabel">Включить доставку (3 000 ₸)</span>
             </label>
         </div>
 
@@ -319,11 +351,9 @@
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25)</td>
                 <td></td><td></td><td></td>
             </tr>
-            <!-- РЯД PROPAKET 2: Пустая строка-разделитель -->
             <tr class="row-propaket" style="display: none; height: 12px;">
                 <td colspan="8"></td>
             </tr>
-            <!-- РЯД PROPAKET 3: Расход за тираж -->
             <tr class="row-propaket" style="display: none;">
                 <td></td><td></td><td></td>
                 <td>Расход за тираж</td>
@@ -404,7 +434,7 @@
         </tbody>
     </table>
 
-    <!-- БЛОК СПЕЦИФИКАЦИИ КП PROPAKET -->
+    <!-- БЛОК СПЕЦИФИКАЦИИ КП -->
     <div id="propaket-kp-block" style="display: none; margin-top: 30px; margin-bottom: 50px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; max-width: 1000px;">
             <div style="flex: 1;">
@@ -458,9 +488,9 @@
     <!-- КЭШБЕК ДЛЯ ВСЕХ -->
     <div class="bottom-right" id="cashback-block">
         <span>Хочет получить </span>
-        <span><input name="K1" value="0" type="text" onchange="calc()">₸</span><br><br>
+        <span><input name="K1" value="0" type="text">₸</span><br><br>
         <span>Хочет добавить </span>
-        <span><input name="K3" value="0" type="text" onchange="calc()">₸</span>
+        <span><input name="K3" value="0" type="text">₸</span>
     </div>
 
 <script type="text/javascript">
@@ -470,14 +500,60 @@ var activeService2 = null;
 var selectedProduct = null;
 var kpItems = []; 
 
-// Каталог услуг для умного поиска
-const servicesCatalog = [
+// Строгая проверка чисел: запрещены запятые, пробелы, буквы
+function checkStrictNum($input, defaultVal) {
+    if (!$input || !$input.length) return defaultVal !== undefined ? defaultVal : 0;
+    let str = $input.val();
+    if (str === '' || str === undefined || str === null) {
+        $input.removeClass('input-error');
+        return defaultVal !== undefined ? defaultVal : 0;
+    }
+    let trimmed = String(str).trim();
+    if (trimmed.includes(',') || trimmed.includes(' ') || isNaN(Number(trimmed)) || isNaN(parseFloat(trimmed))) {
+        $input.addClass('input-error');
+        return NaN;
+    }
+    $input.removeClass('input-error');
+    return Number(trimmed);
+}
+
+// Реестр дополнительных поставщиков упаковки
+var extraSuppliersCatalog = [];
+
+function getCombinedProductsCatalog() {
+    let list = [];
+    if (typeof propaketCatalog !== 'undefined' && Array.isArray(propaketCatalog)) {
+        propaketCatalog.forEach(p => {
+            list.push({
+                ...p,
+                supplier: p.supplier || 'propaket',
+                supplierName: p.supplierName || 'PROPAKET',
+                deliveryCost: p.deliveryCost !== undefined ? p.deliveryCost : 3000,
+                calcFn: p.calcFn || function(prod, sizeKey, qty, front, back, handle, bow, inside) {
+                    if (typeof calculatePropaketItem === 'function') {
+                        return calculatePropaketItem(prod, sizeKey, qty, front, back, handle, bow, inside);
+                    }
+                    return { cost: 0, unitPrice: 0, calcQty: qty };
+                }
+            });
+        });
+    }
+    if (typeof extraSuppliersCatalog !== 'undefined' && Array.isArray(extraSuppliersCatalog)) {
+        extraSuppliersCatalog.forEach(p => list.push(p));
+    }
+    return list;
+}
+
+// Общий каталог услуг умного поиска (Сувенирка + Баннерово)
+var servicesCatalog = [
+    // Рекламная кухня (с НДС)
     { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки рекламная кухня kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
     { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки рекламная кухня kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
     { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки рекламная кухня kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
     { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары рекламная кухня kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
     { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов рекламная кухня kitchen китчен', name: 'УФ: Чехлы для смартфонов [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
 
+    // Квант: гравировка (с НДС)
     { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
     { id: 'kv_pens_plastic', supplier: 'kvant', vat: true, keywords: 'гравировка ручки пластик квант', name: 'Гравировка: Ручки (Пластик) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_plastic, q) },
     { id: 'kv_pens_glossy', supplier: 'kvant', vat: true, keywords: 'гравировка ручки глянец лак квант', name: 'Гравировка: Ручки (Глянцевые/лак) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_glossy, q) },
@@ -493,6 +569,7 @@ const servicesCatalog = [
     { id: 'kv_uv_notebooks', supplier: 'kvant', vat: true, keywords: 'уф печать блокноты ежедневники квант', name: 'УФ: Блокноты [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_notebooks, q) },
     { id: 'kv_uv_bottles', supplier: 'kvant', vat: true, keywords: 'уф печать термосы термокружки бутылки колонки квант', name: 'УФ: Термосы, кружки, бутылки, колонки [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_bottles, q) },
 
+    // VIPLINE (без НДС)
     { id: 'vip_uv_pens', supplier: 'vipline', vat: false, keywords: 'уф печать ручки зажигалки брелоки флешки виплайн vipline', name: 'УФ: Ручки, зажигалки, брелоки, флешки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'small_items', q) },
     { id: 'vip_uv_mugs', supplier: 'vipline', vat: false, keywords: 'уф печать кружки термосы бутылки плоские виплайн vipline', name: 'УФ: Кружки, термосы, бутылки (плоские) [VIPLINE]', fn: (q) => getViplineDirect('uv', 'bottles', q) },
     { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники vipline виплайн', name: 'УФ: Ежедневники, блокноты [VIPLINE]', fn: (q) => getViplineDirect('uv', 'diaries', q) },
@@ -509,11 +586,16 @@ const servicesCatalog = [
     { id: 'vip_dtf_shirts', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf футболки текстиль виплайн vipline', name: 'ДТФ: Футболки до 10 см [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'shirts_small', q) },
     { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q) => calcDtfArea(q) },
 
+    // Эксклюзив (с НДС)
     { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_notebook', q) },
     { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_sheet', q) },
     { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calculateExclusive('bags', q) },
     { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q) => calculateExclusive('die_cutting', q) }
 ];
+
+if (typeof bannerovoServices !== 'undefined' && Array.isArray(bannerovoServices)) {
+    servicesCatalog.push(...bannerovoServices);
+}
 
 function getTierPrice(tiers, q) {
     if (!tiers) return 0;
@@ -577,6 +659,11 @@ function getService2Cost(q) {
             }
         });
         return Math.round(singleCost * q);
+    } else if (activeService2.isBannerovoArea) {
+        let w = Number($('#bannerW2').val()) || 0;
+        let h = Number($('#bannerH2').val()) || 0;
+        let area = (w / 1000) * (h / 1000);
+        return Math.round(area * activeService2.pricePerM2 * q);
     } else {
         return activeService2.fn(q);
     }
@@ -616,7 +703,7 @@ const deliveryPriority = {
 // ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ
 // ==============================================================
 $(document).ready(function() {
-    // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ---
+    // Переключение режимов
     $('#btn-order').click(function() {
         currentMode = 'order';
         $('.menu button').removeClass('active');
@@ -653,7 +740,7 @@ $(document).ready(function() {
         calc();
     });
 
-    // --- УМНЫЙ ПОИСК PROPAKET ---
+    // Умный поиск продукции
     $('#ppSearch').on('input focus', function() {
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#ppSearchResults');
@@ -664,60 +751,69 @@ $(document).ready(function() {
             return;
         }
 
-        if (typeof propaketCatalog !== 'undefined') {
-            let matches = propaketCatalog.filter(item => {
-                let words = query.split(' ');
-                return words.every(w => item.keywords.toLowerCase().includes(w) || item.name.toLowerCase().includes(w));
-            });
+        let allCatalog = getCombinedProductsCatalog();
+        let matches = allCatalog.filter(item => {
+            let words = query.split(' ');
+            let searchTarget = (item.keywords + ' ' + item.name + ' ' + (item.supplierName || '')).toLowerCase();
+            return words.every(w => searchTarget.includes(w));
+        });
 
-            if (matches.length === 0) {
-                $res.append('<div class="search-item" style="color: #888;">Ничего не найдено</div>').show();
-                return;
-            }
-
-            matches.forEach(item => {
-                $res.append(`
-                    <div class="search-item" data-id="${item.id}">
-                        <strong>${item.name}</strong>
-                    </div>
-                `);
-            });
-            $res.show();
+        if (matches.length === 0) {
+            $res.append('<div class="search-item" style="color: #888;">Ничего не найдено</div>').show();
+            return;
         }
+
+        matches.forEach(item => {
+            let sName = item.supplierName || 'PROPAKET';
+            $res.append(`
+                <div class="search-item" data-id="${item.id}">
+                    <strong>${item.name}</strong>
+                    <span class="supplier-tag">[${sName}]</span>
+                </div>
+            `);
+        });
+        $res.show();
     });
 
     $(document).on('click', '#ppSearchResults .search-item', function() {
         let id = $(this).data('id');
-        if (typeof propaketCatalog !== 'undefined') {
-            selectedProduct = propaketCatalog.find(p => p.id === id);
-        }
+        let allCatalog = getCombinedProductsCatalog();
+        selectedProduct = allCatalog.find(p => p.id === id);
 
         if (selectedProduct) {
-            $('#ppSearch').val(selectedProduct.name);
+            let sName = selectedProduct.supplierName || 'PROPAKET';
+            $('#ppSearch').val(`${selectedProduct.name} [${sName}]`);
             $('#ppSearchResults').hide();
             $('#clearSearch').show();
 
+            let dCost = selectedProduct.deliveryCost !== undefined ? selectedProduct.deliveryCost : 3000;
+            $('#ppDeliveryLabel').text(`Включить доставку от ${sName} (${dCost.toLocaleString('ru-RU')} ₸)`);
+
             let $size = $('#ppSize');
             $size.empty();
-            for (let sizeKey in selectedProduct.sizes) {
-                let m = selectedProduct.sizes[sizeKey];
-                let label = sizeKey;
-                let parenMatch = sizeKey.match(/\((.+)\)/);
-                let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
+            if (selectedProduct.sizes) {
+                for (let sizeKey in selectedProduct.sizes) {
+                    let m = selectedProduct.sizes[sizeKey];
+                    let label = sizeKey;
+                    let parenMatch = sizeKey.match(/\((.+)\)/);
+                    let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
 
-                if (selectedProduct.id === 'boxes') {
-                    label = `Длина: ${m.w} мм x Ширина: ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
-                } else if (selectedProduct.id === 'ribbons' || selectedProduct.id === 'tissue') {
-                    label = sizeKey;
-                } else if (m.d > 0) {
-                    label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
-                } else if (m.w && m.h) {
-                    label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм${extraNote}`;
+                    if (selectedProduct.id === 'boxes') {
+                        label = `Длина: ${m.w} мм x Ширина: ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                    } else if (selectedProduct.id === 'ribbons' || selectedProduct.id === 'tissue') {
+                        label = sizeKey;
+                    } else if (m && m.d > 0) {
+                        label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                    } else if (m && m.w && m.h) {
+                        label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм${extraNote}`;
+                    }
+                    $size.append(new Option(label, sizeKey));
                 }
-                $size.append(new Option(label, sizeKey));
+                $('#sizeRow').show();
+            } else {
+                $('#sizeRow').hide();
             }
 
-            $('#sizeRow').show();
             $('#colorRow').show();
 
             if (selectedProduct.id === 'ribbons') {
@@ -746,7 +842,7 @@ $(document).ready(function() {
                 $('#ribbonColorNotice').hide();
             }
 
-            if (selectedProduct.id === 'boxes') {
+            if (selectedProduct.id === 'boxes' || selectedProduct.hasInsidePrint) {
                 $('#boxPrintRow').show();
                 $('#ppBoxInside').val('none');
             } else {
@@ -755,7 +851,7 @@ $(document).ready(function() {
             }
 
             const paperBags = ['paper_white_black', 'paper_color', 'paper_square', 'paper_fullcolor'];
-            if (paperBags.includes(selectedProduct.id)) {
+            if (paperBags.includes(selectedProduct.id) || selectedProduct.hasExtraOptions) {
                 $('#extraOptionsRow').show();
             } else {
                 $('#extraOptionsRow').hide();
@@ -773,6 +869,7 @@ $(document).ready(function() {
         $('#clearSearch, #sizeRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
         $('#optHandle, #optBow').prop('checked', false);
         $('#ppBoxInside').val('none');
+        $('#ppDeliveryLabel').text('Включить доставку (3 000 ₸)');
         calc();
     });
 
@@ -798,12 +895,12 @@ $(document).ready(function() {
         calc();
     });
 
-    // --- ДОБАВЛЕНИЕ В СПЕЦИФИКАЦИЮ КП PROPAKET ---
+    // КП Спецификация
     $('#btn-add-kp').click(function() {
         if (!selectedProduct) return;
 
         let sizeKey = $('#ppSize').val();
-        let meta = selectedProduct.sizes[sizeKey];
+        let meta = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
         let qty = Number($('tr.row-propaket input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
@@ -815,7 +912,7 @@ $(document).ready(function() {
         let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
         let totalColors = frontColors + backColors;
         let orientStr = meta && meta.orient ? meta.orient : '';
-        let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : sizeKey;
+        let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : (sizeKey || '');
 
         let itemTitle = '';
         if (selectedProduct.id === 'ribbons') {
@@ -830,7 +927,7 @@ $(document).ready(function() {
         }
 
         let dimLabel = '';
-        let parenMatch = sizeKey.match(/\((.+)\)/);
+        let parenMatch = sizeKey ? sizeKey.match(/\((.+)\)/) : null;
         let variantNote = parenMatch ? ` (${parenMatch[1]})` : '';
 
         if (selectedProduct.id === 'boxes') {
@@ -844,7 +941,7 @@ $(document).ready(function() {
         } else if (meta) {
             dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм${variantNote}`;
         } else {
-            dimLabel = `Размер: ${sizeKey}`;
+            dimLabel = sizeKey ? `Размер: ${sizeKey}` : '';
         }
 
         let printText = '';
@@ -866,11 +963,12 @@ $(document).ready(function() {
         if ($('#optBow').is(':checked')) extraText.push('бант (+100 ₸)');
         if (extraText.length > 0) printText += `<br><i>Доп. опции: ${extraText.join(', ')}</i>`;
 
-        let descHtml = `${dimLabel}<br>${printText}`;
+        let descHtml = dimLabel ? `${dimLabel}<br>${printText}` : printText;
         let deliveryDays = getDeliveryDays(qty);
 
         kpItems.push({
             id: Date.now() + Math.random(),
+            supplier: selectedProduct.supplierName || 'PROPAKET',
             title: itemTitle,
             desc: descHtml,
             qty: qty,
@@ -954,7 +1052,7 @@ $(document).ready(function() {
 
             badgesContainer.append(`
                 <div class="kp-badge">
-                    #${idx + 1} ${item.qty} шт 
+                    #${idx + 1} ${item.qty} шт [${item.supplier}]
                     <button class="kp-badge-btn remove-kp-item" data-id="${item.id}" title="Удалить позицию">✖</button>
                 </div>
             `);
@@ -963,7 +1061,7 @@ $(document).ready(function() {
         $('#kpGrandDelivery').text(maxDeliveryText);
     }
 
-    // --- УМНЫЙ ПОИСК (ОСНОВНОЙ ЗАКАЗ - НАНЕСЕНИЕ 1) ---
+    // Умный поиск: Нанесение 1
     $('#serviceSearch').on('input focus', function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
@@ -988,7 +1086,12 @@ $(document).ready(function() {
             let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
 
-            if (!item.vat) {
+            if (item.isBannerovoArea) {
+                let w = Number($('#bannerW').val()) || 1000;
+                let h = Number($('#bannerH').val()) || 2000;
+                let totArea = ((w / 1000) * (h / 1000) * q).toFixed(2);
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м² по ${item.pricePerM2} ₸/м²)`;
+            } else if (!item.vat) {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
                 displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
@@ -1015,9 +1118,10 @@ $(document).ready(function() {
             $('#searchResults').hide();
             $('#clearService, #delivery-wrap').show();
 
-            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche));
+            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche || activeService.isBannerovoArea));
             $('#clicheParams').toggle(!!activeService.isCliche);
             $('#dtfParams').toggle(!!activeService.isDtfArea);
+            $('#bannerovoParams').toggle(!!activeService.isBannerovoArea);
 
             calc();
         }
@@ -1026,11 +1130,11 @@ $(document).ready(function() {
     $('#clearService').click(function() {
         activeService = null;
         $('#serviceSearch').val('');
-        $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults, #selectedServiceCostBadge').hide();
+        $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults, #selectedServiceCostBadge, #bannerovoParams').hide();
         calc();
     });
 
-    // --- УМНЫЙ ПОИСК (ОСНОВНОЙ ЗАКАЗ - НАНЕСЕНИЕ 2) ---
+    // Умный поиск: Нанесение 2
     $('#btn-show-second-service').click(function() {
         $('#second-supplier-panel').data('open', true).slideDown(150);
         $(this).hide();
@@ -1040,7 +1144,7 @@ $(document).ready(function() {
         activeService2 = null;
         $('#second-supplier-panel').data('open', false).slideUp(150);
         $('#serviceSearch2').val('');
-        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2').hide();
+        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2, #bannerovoParams2').hide();
         $('#btn-show-second-service').show();
         calc();
     });
@@ -1069,7 +1173,12 @@ $(document).ready(function() {
             let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
 
-            if (!item.vat) {
+            if (item.isBannerovoArea) {
+                let w = Number($('#bannerW2').val()) || 1000;
+                let h = Number($('#bannerH2').val()) || 2000;
+                let totArea = ((w / 1000) * (h / 1000) * q).toFixed(2);
+                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м² по ${item.pricePerM2} ₸/м²)`;
+            } else if (!item.vat) {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
                 displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
@@ -1096,9 +1205,10 @@ $(document).ready(function() {
             $('#searchResults2').hide();
             $('#clearService2, #delivery-wrap2').show();
 
-            $('#extraParamsWrap2').toggle(!!(activeService2.isDtfArea || activeService2.isCliche));
+            $('#extraParamsWrap2').toggle(!!(activeService2.isDtfArea || activeService2.isCliche || activeService2.isBannerovoArea));
             $('#clicheParams2').toggle(!!activeService2.isCliche);
             $('#dtfParams2').toggle(!!activeService2.isDtfArea);
+            $('#bannerovoParams2').toggle(!!activeService2.isBannerovoArea);
 
             calc();
         }
@@ -1107,7 +1217,7 @@ $(document).ready(function() {
     $('#clearService2').click(function() {
         activeService2 = null;
         $('#serviceSearch2').val('');
-        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2').hide();
+        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2, #bannerovoParams2').hide();
         calc();
     });
 
@@ -1117,7 +1227,7 @@ $(document).ready(function() {
         }
     });
 
-    // ДТФ и клише точки
+    // ДТФ точки
     $('#addDtfPoint').click(function() {
         $('#dtf-points').append(`
             <span class="dtf-point" style="margin-left: 5px;">
@@ -1148,6 +1258,7 @@ $(document).ready(function() {
         calc();
     });
 
+    // Клише
     $('#clicheExists').change(function() {
         $('#clicheAreaBlock').css('opacity', $(this).is(':checked') ? '0.4' : '1');
         calc();
@@ -1172,6 +1283,42 @@ $(document).ready(function() {
         calc();
     });
 
+    // Габариты Баннерово
+    $('#bannerW, #bannerH').on('input change', function() {
+        let w = Number($('#bannerW').val()) || 0;
+        let h = Number($('#bannerH').val()) || 0;
+        let area = (w / 1000) * (h / 1000);
+        $('#bannerAreaOut').text(`(${area.toFixed(2)} м²)`);
+        calc();
+    });
+
+    $('#bannerW2, #bannerH2').on('input change', function() {
+        let w = Number($('#bannerW2').val()) || 0;
+        let h = Number($('#bannerH2').val()) || 0;
+        let area = (w / 1000) * (h / 1000);
+        $('#bannerAreaOut2').text(`(${area.toFixed(2)} м²)`);
+        calc();
+    });
+
+    // Кэшбек: синхронизация при вводе
+    $('input[name="K1"]').on('input', function() {
+        let v = checkStrictNum($(this), 0);
+        if (!isNaN(v)) {
+            let syn = Math.round(v * 1.7052);
+            $('input[name="K3"]').val(syn.toFixed(2)).removeClass('input-error');
+        }
+        calc();
+    });
+
+    $('input[name="K3"]').on('input', function() {
+        let v = checkStrictNum($(this), 0);
+        if (!isNaN(v)) {
+            let syn = Math.round(v / 1.7052);
+            $('input[name="K1"]').val(syn.toFixed(2)).removeClass('input-error');
+        }
+        calc();
+    });
+
     $('input, select').on('input change keyup', () => calc());
     calc();
 });
@@ -1181,16 +1328,113 @@ var F = {};
 var R = {};
 
 function calc() {
-    T.F6 = Number($('input[name="F6"]').val()) || 0; 
-    T.F7 = Number($('input[name="F7"]').val()) || 0; 
-    T.K1 = Number($('input[name="K1"]').val()) || 0; 
-    T.K3 = Number($('input[name="K3"]').val()) || 0; 
-    T.PB2 = Number($('input[name="PB2"]').val()) || 6; 
-    
+    let hasError = false;
+
+    // Валидация общих полей
+    let $f6 = $('tr:visible input[name="F6"]');
+    T.F6 = $f6.length ? checkStrictNum($f6, 0) : 0;
+    if (isNaN(T.F6)) hasError = true;
+
+    let $f7 = $('tr:visible input[name="F7"]');
+    T.F7 = $f7.length ? checkStrictNum($f7, 0) : 0;
+    if (isNaN(T.F7)) hasError = true;
+
+    let $k1 = $('input[name="K1"]');
+    T.K1 = checkStrictNum($k1, 0);
+    if (isNaN(T.K1)) hasError = true;
+
+    let $k3 = $('input[name="K3"]');
+    T.K3 = checkStrictNum($k3, 0);
+    if (isNaN(T.K3)) hasError = true;
+
+    let $pb2 = $('tr:visible input[name="PB2"]');
+    T.PB2 = $pb2.length ? checkStrictNum($pb2, 6) : 6;
+    if (isNaN(T.PB2)) hasError = true;
+
     ['C3', 'C5', 'C6', 'F3', 'F4', 'F4_simp', 'F5'].forEach(function(el) {
-        let visibleInput = $('tr:visible input[name="' + el + '"]');
-        T[el] = visibleInput.length ? (Number(visibleInput.val()) || 0) : 0; 
+        let $inp = $('tr:visible input[name="' + el + '"]');
+        let val = 0;
+        if ($inp.length) {
+            val = checkStrictNum($inp, 0);
+            if (isNaN(val)) hasError = true;
+        }
+        T[el] = val;
     });
+
+    let $markupInp = $('tr:visible input[name="markup"]');
+    var markup = 1.35;
+    if ($markupInp.length) {
+        markup = checkStrictNum($markupInp, 1.35);
+        if (isNaN(markup)) hasError = true;
+    }
+
+    let $discInp = $('tr:visible input[name="addDiscount"]');
+    var addDiscount = 0;
+    if ($discInp.length) {
+        addDiscount = checkStrictNum($discInp, 0);
+        if (isNaN(addDiscount)) hasError = true;
+    }
+
+    if ($('#showUsd').is(':checked') && currentMode === 'order') {
+        let $usd = $('#usdRate');
+        var usdRateVal = checkStrictNum($usd, 480);
+        if (isNaN(usdRateVal)) hasError = true;
+    }
+
+    // Валидация параметров Баннерово, клише и ДТФ
+    if (currentMode === 'order') {
+        if (activeService && activeService.isBannerovoArea) {
+            let bw = checkStrictNum($('#bannerW'), 1000);
+            let bh = checkStrictNum($('#bannerH'), 2000);
+            if (isNaN(bw) || isNaN(bh)) hasError = true;
+        }
+        if (activeService2 && activeService2.isBannerovoArea) {
+            let bw2 = checkStrictNum($('#bannerW2'), 1000);
+            let bh2 = checkStrictNum($('#bannerH2'), 2000);
+            if (isNaN(bw2) || isNaN(bh2)) hasError = true;
+        }
+        if (activeService && activeService.isCliche && !$('#clicheExists').is(':checked')) {
+            let cw = checkStrictNum($('#clicheW'), 50);
+            let ch = checkStrictNum($('#clicheH'), 50);
+            if (isNaN(cw) || isNaN(ch)) hasError = true;
+        }
+        if (activeService2 && activeService2.isCliche && !$('#clicheExists2').is(':checked')) {
+            let cw2 = checkStrictNum($('#clicheW2'), 50);
+            let ch2 = checkStrictNum($('#clicheH2'), 50);
+            if (isNaN(cw2) || isNaN(ch2)) hasError = true;
+        }
+        if (activeService && activeService.isDtfArea) {
+            $('.dtf-point').each(function() {
+                let w = checkStrictNum($(this).find('.dtf-w'), 100);
+                let h = checkStrictNum($(this).find('.dtf-h'), 100);
+                if (isNaN(w) || isNaN(h)) hasError = true;
+            });
+        }
+        if (activeService2 && activeService2.isDtfArea) {
+            $('.dtf-point2').each(function() {
+                let w = checkStrictNum($(this).find('.dtf-w2'), 100);
+                let h = checkStrictNum($(this).find('.dtf-h2'), 100);
+                if (isNaN(w) || isNaN(h)) hasError = true;
+            });
+        }
+    } else if (currentMode === 'propaket') {
+        let pf = checkStrictNum($('#ppFront'), 1);
+        let pb = checkStrictNum($('#ppBack'), 0);
+        if (isNaN(pf) || isNaN(pb)) hasError = true;
+    }
+
+    // Если обнаружена ошибка ввода — выводим NaN и останавливаем расчет
+    if (hasError) {
+        $('input[name="C8"]').val('NaN');
+        $('input[name="C9"]').val('NaN');
+        $('input[name="F9"]').val('NaN');
+        if ($('#showUsd').is(':checked') && currentMode === 'order') {
+            $('input[name="usdUnit"]').val('$ NaN');
+            $('input[name="usdTotal"]').val('$ NaN');
+        }
+        $('#selectedServiceCostBadge, #selectedServiceCostBadge2, #ppCostBadge').hide();
+        return;
+    }
 
     let quantity = T.C5 || 1; 
 
@@ -1198,14 +1442,13 @@ function calc() {
     let supplierCostWithVat = 0;   
     let autoCashExpense = 0;       
 
-    var markup = Number($('tr:visible input[name="markup"]').val()) || 1.35;   
     markup = Math.max(markup, 1.25);                                
     markup = Math.min(markup, 9);
 
     var origin = $('tr:visible input[name="origin"]:checked').val() || 'kazakhstan';
     var vat = $('tr:visible input[name="vat"]:checked').val() || 'withVAT';
 
-    // --- ЛОГИКА PROPAKET ---
+    // Расчет упаковки и продукции
     if (currentMode === 'propaket') {
         origin = 'kazakhstan'; 
         vat = 'withVAT';
@@ -1222,34 +1465,44 @@ function calc() {
             let addBow = $('#optBow').is(':checked');
             let boxInside = $('#ppBoxInside').val();
 
-            if (typeof calculatePropaketItem === 'function') {
-                let info = calculatePropaketItem(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside);
-                itemCost = info.cost || 0;
-                unitBase = info.unitPrice || 0;
-                calcQty = info.calcQty || quantity;
-            }
+            let info = selectedProduct.calcFn
+                ? selectedProduct.calcFn(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside)
+                : (typeof calculatePropaketItem === 'function' ? calculatePropaketItem(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside) : { cost: 0, unitPrice: 0 });
+
+            itemCost = info.cost || 0;
+            unitBase = info.unitPrice || 0;
+            calcQty = info.calcQty || quantity;
         }
 
         if (itemCost > 0) {
             supplierCostWithVat += itemCost;
+            let sName = selectedProduct ? (selectedProduct.supplierName || 'Поставщик') : 'Поставщик';
             let minNotice = (calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${calcQty.toLocaleString('ru-RU')} шт)</span>` : '';
-            $('#ppCostBadge').html(`Расход поставщика: <strong>${itemCost.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">(по ${unitBase} ₸/шт с НДС)</span>${minNotice}`).show();
+            $('#ppCostBadge').html(`Расход [${sName}]: <strong>${itemCost.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">(по ${unitBase} ₸/шт с НДС)</span>${minNotice}`).show();
             $('#btn-add-kp').show();
         } else {
             $('#ppCostBadge, #btn-add-kp').hide();
         }
         
         if ($('#ppAddDelivery').is(':checked') && itemCost > 0) {
-            autoCashExpense += 3000;
+            let dCost = (selectedProduct && selectedProduct.deliveryCost !== undefined) ? selectedProduct.deliveryCost : 3000;
+            autoCashExpense += dCost;
         }
     } 
-    // --- ЛОГИКА ОСНОВНОГО ЗАКАЗА ---
+    // Расчет основного заказа
     else if (currentMode === 'order') {
         if (activeService) {
             let rawCost = activeService.fn(quantity);
             if (activeService.vat) {
                 supplierCostWithVat += rawCost;
-                $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+                if (activeService.isBannerovoArea) {
+                    let w = Number($('#bannerW').val()) || 1000;
+                    let h = Number($('#bannerH').val()) || 2000;
+                    let totArea = ((w / 1000) * (h / 1000) * quantity).toFixed(2);
+                    $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м²)`).show();
+                } else {
+                    $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+                }
             } else {
                 supplierCostWithoutVat += rawCost;
                 let f4_markup = markup * 1.16;
@@ -1269,7 +1522,14 @@ function calc() {
             let rawCost2 = getService2Cost(quantity);
             if (activeService2.vat) {
                 supplierCostWithVat += rawCost2;
-                $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+                if (activeService2.isBannerovoArea) {
+                    let w2 = Number($('#bannerW2').val()) || 1000;
+                    let h2 = Number($('#bannerH2').val()) || 2000;
+                    let totArea2 = ((w2 / 1000) * (h2 / 1000) * quantity).toFixed(2);
+                    $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea2} м²)`).show();
+                } else {
+                    $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
+                }
             } else {
                 supplierCostWithoutVat += rawCost2;
                 let f4_markup = markup * 1.16;
@@ -1296,10 +1556,6 @@ function calc() {
         $('#currency-symbol').text('₽');
     }
     
-    if ($('input[name="K1"]').is(':focus')) { T.K3 = Math.round(T.K1 * 1.7052); }
-    if ($('input[name="K3"]').is(':focus')) { T.K1 = Math.round(T.K3 / 1.7052); }
-    
-    var addDiscount = Number($('input[name="addDiscount"]').val()) || 0; 
     addDiscount = Math.max(0, Math.min(addDiscount, 90)); 
     var addDiscountK = 1 - addDiscount / 100;                 
     
@@ -1405,9 +1661,6 @@ function calc() {
         T.K2 = Math.round(T.F9 * markup + T.K3 + (T.K3 * 0.05));
         T.K4 = Math.round(T.F9 + T.K3);
     }
-
-    $('input[name="K1"]').val(T.K1.toFixed(2)); 
-    $('input[name="K3"]').val(T.K3.toFixed(2)); 
 
     $('input[name="C8"]').val(T.C8 || 0);
     $('input[name="C9"]').val(T.C9 || 0);
