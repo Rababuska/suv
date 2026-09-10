@@ -337,7 +337,7 @@
             <!-- РЯД PROPAKET 1: Тираж и Накрутка -->
             <tr class="row-propaket" style="display: none;">
                 <td>Тираж</td>
-                <td><input name="C5" value="100" type="text">шт. (м.)</td>
+                <td><input name="C5" value="1" type="text">шт. (м.)</td>
                 <td></td>
                 <td>Накрутка</td>
                 <td><input name="markup" value="1.35" min="1.25" type="text">коэфф (мин=1.25)</td>
@@ -689,7 +689,6 @@ $(document).ready(function() {
         calc();
     });
 
-    // Режим СКЛАД (Алматы) — нанесение активно и доступно
     $('#btn-sklad').click(function() {
         currentMode = 'sklad';
         $('.menu button').removeClass('active');
@@ -716,7 +715,6 @@ $(document).ready(function() {
         calc();
     });
 
-    // Умный поиск в каталоге ПРОДУКЦИЯ / ПАКЕТЫ
     $('#ppSearch').on('input focus', function() {
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#ppSearchResults');
@@ -777,8 +775,7 @@ $(document).ready(function() {
                 let $size = $('#ppSize');
                 $size.empty();
                 for (let sizeKey in selectedProduct.sizes) {
-                    let c = selectedProduct.sizes[sizeKey];
-                    $size.append(new Option(`${sizeKey} (${c.price.toLocaleString('ru-RU')} ₸)`, sizeKey));
+                    $size.append(new Option(sizeKey, sizeKey));
                 }
                 $('#sizeRow').show();
             } 
@@ -919,7 +916,7 @@ $(document).ready(function() {
             let h = Number($('#ppCustomH').val()) || 2000;
             let areaM2 = (w / 1000) * (h / 1000);
             itemTitle = `Полиграфические услуги - ${selectedProduct.name}`;
-            descHtml = `Размер: ${w}x${h} мм (${areaM2.toFixed(2)} м²), печать полноцветная интерьерная/наружная`;
+            descHtml = `Размер: ${w}*${h} мм (${areaM2.toFixed(2)} м²), широкоформатная/интерьерная печать`;
             deliveryDays = '3-5';
         }
         else if (selectedProduct.isConstruction) {
@@ -1372,7 +1369,6 @@ function calc() {
         if (isNaN(usdRateVal)) hasError = true;
     }
 
-    // Валидация нанесения: работает и в "Заказ", и в "Склад"
     if (currentMode === 'order' || currentMode === 'sklad') {
         if (activeService && activeService.isCliche && !$('#clicheExists').is(':checked')) {
             let cw = checkStrictNum($('#clicheW'), 50);
@@ -1444,6 +1440,7 @@ function calc() {
         let calcQty = quantity;
 
         if (selectedProduct) {
+            // Квадратурная печать Баннерово (с НДС)
             if (selectedProduct.isSquareArea) {
                 let w = Number($('#ppCustomW').val()) || 1000;
                 let h = Number($('#ppCustomH').val()) || 2000;
@@ -1452,6 +1449,7 @@ function calc() {
                 itemCost = Math.round(unitBase * quantity);
                 calcQty = quantity;
             }
+            // Мобильные конструкции Баннерово (с НДС)
             else if (selectedProduct.isConstruction) {
                 let sizeKey = $('#ppSize').val();
                 let c = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
@@ -1459,6 +1457,7 @@ function calc() {
                 itemCost = unitBase * quantity;
                 calcQty = quantity;
             }
+            // Стандартный PROPAKET
             else {
                 let sizeKey = $('#ppSize').val();
                 let ppFront = parseInt($('#ppFront').val()) || 1;
@@ -1480,7 +1479,10 @@ function calc() {
             supplierCostWithVat += itemCost;
             let sName = selectedProduct ? (selectedProduct.supplierName || 'Поставщик') : 'Поставщик';
             let minNotice = (calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${calcQty.toLocaleString('ru-RU')} шт)</span>` : '';
-            $('#ppCostBadge').html(`Расход [${sName}]: <strong>${itemCost.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">(по ${unitBase} ₸/шт с НДС)</span>${minNotice}`).show();
+            let unitNotice = selectedProduct.isSquareArea 
+                ? `(по ${selectedProduct.pricePerM2.toLocaleString('ru-RU')} ₸/м², ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`
+                : `(по ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`;
+            $('#ppCostBadge').html(`Расход [${sName}]: <strong>${itemCost.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">${unitNotice}</span>${minNotice}`).show();
             $('#btn-add-kp').show();
         } else {
             $('#ppCostBadge, #btn-add-kp').hide();
@@ -1644,7 +1646,6 @@ function calc() {
             T.K4 = Math.round(T.F9 + T.K3);                             
         }
     } else {
-        // Режим Склад (Алматы) с поддержкой нанесений
         var productInfo = $('select[name="product"]').val().split(';');
         var sellingPrice = Number(productInfo[0]);   
         var purchasePrice = Number(productInfo[1]);  
