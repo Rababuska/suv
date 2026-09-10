@@ -171,19 +171,27 @@
         <strong style="display: block; margin-bottom: 12px;">Поиск и выбор продукции (все поставщики):</strong>
         
         <div style="margin-bottom: 15px; position: relative;">
-            <span style="display: inline-block; width: 110px;">Товар / тип:</span>
+            <span style="display: inline-block; width: 110px;">Товар / группа:</span>
             <div class="search-box-wrap">
-                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, баннер, паук, роллап)..." autocomplete="off">
+                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (роллап, паук, баннер, оракал, крафт, пвд, коробки)..." autocomplete="off">
                 <div id="ppSearchResults" class="search-results"></div>
             </div>
             <button type="button" id="clearSearch" style="padding: 5px 10px; margin-left: 8px; display: none; cursor: pointer;">✖ Сброс</button>
         </div>
 
+        <!-- Выбор подтипа / материала (для сгруппированных конструкций и печати Баннерово) -->
+        <div id="subtypeRow" style="margin-bottom: 15px; display: none;">
+            <span style="display: inline-block; width: 110px;">Тип / материал:</span>
+            <select id="ppSubtype" style="min-width: 500px;"></select>
+        </div>
+
+        <!-- Выбор стандартного размера (пакеты, коробки, конструкции) -->
         <div id="sizeRow" style="margin-bottom: 15px; display: none;">
             <span style="display: inline-block; width: 110px;">Размер:</span>
             <select id="ppSize" style="min-width: 500px;"></select>
         </div>
 
+        <!-- Ввод кастомных размеров (широкоформатная/интерьерная печать) -->
         <div id="customAreaRow" style="margin-bottom: 15px; display: none;">
             <span style="display: inline-block; width: 110px;">Размер (мм):</span>
             <input type="number" id="ppCustomW" class="mm-input" style="width: 65px;" value="1000" min="0" step="10"> x 
@@ -191,6 +199,7 @@
             <span id="ppCustomAreaOut" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 8px;">(2.00 м²)</span>
         </div>
 
+        <!-- Выбор цветов для пакетов -->
         <div id="colorRow" style="margin-bottom: 15px; display: none;">
             <span id="frontColorLabel" style="display: inline-block; width: 160px;">Цветов спереди (1-3):</span>
             <input type="number" id="ppFront" value="1" min="1" max="3" class="mm-input" style="margin-right: 20px;">
@@ -715,6 +724,7 @@ $(document).ready(function() {
         calc();
     });
 
+    // Умный поиск в каталоге ПРОДУКЦИЯ / ПАКЕТЫ
     $('#ppSearch').on('input focus', function() {
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#ppSearchResults');
@@ -749,6 +759,7 @@ $(document).ready(function() {
         $res.show();
     });
 
+    // Выбор товара в каталоге ПРОДУКЦИЯ / ПАКЕТЫ
     $(document).on('click', '#ppSearchResults .search-item', function() {
         let id = $(this).data('id');
         let allCatalog = getCombinedProductsCatalog();
@@ -763,24 +774,39 @@ $(document).ready(function() {
             let dCost = selectedProduct.deliveryCost !== undefined ? selectedProduct.deliveryCost : 3000;
             $('#ppDeliveryLabel').text(`Включить доставку от ${sName} (${dCost.toLocaleString('ru-RU')} ₸)`);
 
-            if (selectedProduct.isSquareArea) {
+            // А. Сгруппированные мобильные конструкции (Roll-Up, Паук, Pop-Up)
+            if (selectedProduct.isGroupedConstruction) {
+                $('#customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow').hide();
+                
+                let $sub = $('#ppSubtype');
+                $sub.empty();
+                for (let subKey in selectedProduct.subtypes) {
+                    let sub = selectedProduct.subtypes[subKey];
+                    $sub.append(new Option(sub.name, subKey));
+                }
+                $('#subtypeRow').show();
+                updateConstructionSizes();
+                $('#sizeRow').show();
+            }
+            // Б. Сгруппированная квадратурная печать (Баннеры, Пленка, Бэклит, Холсты и др.)
+            else if (selectedProduct.isGroupedSquare) {
                 $('#sizeRow, #colorRow, #boxPrintRow, #extraOptionsRow').hide();
+                
+                let $sub = $('#ppSubtype');
+                $sub.empty();
+                for (let matKey in selectedProduct.materials) {
+                    let mat = selectedProduct.materials[matKey];
+                    $sub.append(new Option(mat.name, matKey));
+                }
+                $('#subtypeRow').show();
                 $('#customAreaRow').show();
                 $('#ppCustomW').val(selectedProduct.defaultW || 1000);
                 $('#ppCustomH').val(selectedProduct.defaultH || 2000);
                 updateCustomAreaBadge();
-            } 
-            else if (selectedProduct.isConstruction) {
-                $('#customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow').hide();
-                let $size = $('#ppSize');
-                $size.empty();
-                for (let sizeKey in selectedProduct.sizes) {
-                    $size.append(new Option(sizeKey, sizeKey));
-                }
-                $('#sizeRow').show();
-            } 
+            }
+            // В. Стандартный PROPAKET (пакеты, коробки, ленты)
             else {
-                $('#customAreaRow').hide();
+                $('#subtypeRow, #customAreaRow').hide();
                 let $size = $('#ppSize');
                 $size.empty();
                 if (selectedProduct.sizes) {
@@ -856,6 +882,26 @@ $(document).ready(function() {
         }
     });
 
+    function updateConstructionSizes() {
+        if (!selectedProduct || !selectedProduct.isGroupedConstruction) return;
+        let subKey = $('#ppSubtype').val();
+        let sub = selectedProduct.subtypes[subKey];
+        let $size = $('#ppSize');
+        $size.empty();
+        if (sub && sub.sizes) {
+            for (let sKey in sub.sizes) {
+                $size.append(new Option(sKey, sKey));
+            }
+        }
+    }
+
+    $('#ppSubtype').change(function() {
+        if (selectedProduct && selectedProduct.isGroupedConstruction) {
+            updateConstructionSizes();
+        }
+        calc();
+    });
+
     function updateCustomAreaBadge() {
         let w = Number($('#ppCustomW').val()) || 0;
         let h = Number($('#ppCustomH').val()) || 0;
@@ -871,7 +917,7 @@ $(document).ready(function() {
     $('#clearSearch').click(function() {
         selectedProduct = null;
         $('#ppSearch').val('');
-        $('#clearSearch, #sizeRow, #customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
+        $('#clearSearch, #subtypeRow, #sizeRow, #customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
         $('#optHandle, #optBow').prop('checked', false);
         $('#ppBoxInside').val('none');
         $('#ppDeliveryLabel').text('Включить доставку (3 000 ₸)');
@@ -900,6 +946,7 @@ $(document).ready(function() {
         calc();
     });
 
+    // Добавление в спецификацию КП
     $('#btn-add-kp').click(function() {
         if (!selectedProduct) return;
 
@@ -911,20 +958,27 @@ $(document).ready(function() {
         let descHtml = '';
         let deliveryDays = '5-7';
 
-        if (selectedProduct.isSquareArea) {
+        // 1. Мобильные конструкции (Roll-Up, Паук, Pop-Up)
+        if (selectedProduct.isGroupedConstruction) {
+            let subKey = $('#ppSubtype').val();
+            let sub = selectedProduct.subtypes[subKey];
+            let sizeKey = $('#ppSize').val();
+            itemTitle = `Мобильный стенд - ${selectedProduct.name} (${sub.name})`;
+            descHtml = `Размер: <strong>${sizeKey}</strong>, в сборе с печатью`;
+            deliveryDays = '2-4';
+        }
+        // 2. Квадратурная печать (Баннеры, Пленка, Бэклит и т.д.)
+        else if (selectedProduct.isGroupedSquare) {
+            let matKey = $('#ppSubtype').val();
+            let mat = selectedProduct.materials[matKey];
             let w = Number($('#ppCustomW').val()) || 1000;
             let h = Number($('#ppCustomH').val()) || 2000;
             let areaM2 = (w / 1000) * (h / 1000);
-            itemTitle = `Полиграфические услуги - ${selectedProduct.name}`;
+            itemTitle = `Полиграфические услуги - ${mat.name}`;
             descHtml = `Размер: ${w}*${h} мм (${areaM2.toFixed(2)} м²), широкоформатная/интерьерная печать`;
             deliveryDays = '3-5';
         }
-        else if (selectedProduct.isConstruction) {
-            let sizeKey = $('#ppSize').val();
-            itemTitle = `Мобильная конструкция - ${selectedProduct.name}`;
-            descHtml = `Параметры: ${sizeKey}`;
-            deliveryDays = '2-4';
-        }
+        // 3. Стандартный PROPAKET
         else {
             let sizeKey = $('#ppSize').val();
             let meta = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
@@ -1395,11 +1449,11 @@ function calc() {
             });
         }
     } else if (currentMode === 'propaket') {
-        if (selectedProduct && selectedProduct.isSquareArea) {
+        if (selectedProduct && selectedProduct.isGroupedSquare) {
             let cw = checkStrictNum($('#ppCustomW'), 1000);
             let ch = checkStrictNum($('#ppCustomH'), 2000);
             if (isNaN(cw) || isNaN(ch)) hasError = true;
-        } else if (selectedProduct && !selectedProduct.isConstruction) {
+        } else if (selectedProduct && !selectedProduct.isGroupedConstruction) {
             let pf = checkStrictNum($('#ppFront'), 1);
             let pb = checkStrictNum($('#ppBack'), 0);
             if (isNaN(pf) || isNaN(pb)) hasError = true;
@@ -1438,26 +1492,41 @@ function calc() {
         let itemCost = 0;
         let unitBase = 0;
         let calcQty = quantity;
+        let unitNotice = '';
 
         if (selectedProduct) {
-            // Квадратурная печать Баннерово (с НДС)
-            if (selectedProduct.isSquareArea) {
+            // А. Сгруппированные конструкции (Roll-Up, Паук, Pop-Up)
+            if (selectedProduct.isGroupedConstruction) {
+                let subKey = $('#ppSubtype').val();
+                let sub = selectedProduct.subtypes[subKey];
+                let sizeKey = $('#ppSize').val();
+                let sizeObj = (sub && sub.sizes) ? sub.sizes[sizeKey] : null;
+                
+                if (sizeObj && sizeObj.tiers) {
+                    unitBase = getBannerovoConstPrice(sizeObj.tiers, quantity);
+                    itemCost = unitBase * quantity;
+                }
+                calcQty = quantity;
+                unitNotice = `(по ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`;
+            }
+            // Б. Сгруппированная квадратурная печать
+            else if (selectedProduct.isGroupedSquare) {
+                let matKey = $('#ppSubtype').val();
+                let mat = selectedProduct.materials[matKey];
                 let w = Number($('#ppCustomW').val()) || 1000;
                 let h = Number($('#ppCustomH').val()) || 2000;
-                let areaM2 = (w / 1000) * (h / 1000);
-                unitBase = Math.round(areaM2 * selectedProduct.pricePerM2);
-                itemCost = Math.round(unitBase * quantity);
+                let singleArea = (w / 1000) * (h / 1000);
+                let totalArea = singleArea * quantity;
+
+                if (mat && mat.tiers) {
+                    let pricePerM2 = getBannerovoSquarePrice(mat.tiers, totalArea);
+                    unitBase = Math.round(singleArea * pricePerM2);
+                    itemCost = Math.round(unitBase * quantity);
+                    unitNotice = `(по ${pricePerM2.toLocaleString('ru-RU')} ₸/м², ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`;
+                }
                 calcQty = quantity;
             }
-            // Мобильные конструкции Баннерово (с НДС)
-            else if (selectedProduct.isConstruction) {
-                let sizeKey = $('#ppSize').val();
-                let c = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
-                unitBase = c ? c.price : 0;
-                itemCost = unitBase * quantity;
-                calcQty = quantity;
-            }
-            // Стандартный PROPAKET
+            // В. Стандартный PROPAKET
             else {
                 let sizeKey = $('#ppSize').val();
                 let ppFront = parseInt($('#ppFront').val()) || 1;
@@ -1471,6 +1540,7 @@ function calc() {
                     itemCost = info.cost || 0;
                     unitBase = info.unitPrice || 0;
                     calcQty = info.calcQty || quantity;
+                    unitNotice = `(по ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`;
                 }
             }
         }
@@ -1479,9 +1549,6 @@ function calc() {
             supplierCostWithVat += itemCost;
             let sName = selectedProduct ? (selectedProduct.supplierName || 'Поставщик') : 'Поставщик';
             let minNotice = (calcQty > quantity) ? `<br><span style="color:#d9534f; font-weight:bold;">(Мин. расчет за ${calcQty.toLocaleString('ru-RU')} шт)</span>` : '';
-            let unitNotice = selectedProduct.isSquareArea 
-                ? `(по ${selectedProduct.pricePerM2.toLocaleString('ru-RU')} ₸/м², ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`
-                : `(по ${unitBase.toLocaleString('ru-RU')} ₸/шт с НДС)`;
             $('#ppCostBadge').html(`Расход [${sName}]: <strong>${itemCost.toLocaleString('ru-RU')} ₸</strong> <span style="font-size:11px; color:#555;">${unitNotice}</span>${minNotice}`).show();
             $('#btn-add-kp').show();
         } else {
@@ -1493,7 +1560,7 @@ function calc() {
             autoCashExpense += dCost;
         }
     } 
-    // 2. Расчет нанесений 1 и 2 — работает и для "ЗАКАЗ", и для "СКЛАД (Алматы)"
+    // 2. Расчет нанесений 1 и 2 — для "ЗАКАЗ" и "СКЛАД"
     else if (currentMode === 'order' || currentMode === 'sklad') {
         if (activeService) {
             let rawCost = activeService.fn(quantity);
@@ -1556,9 +1623,9 @@ function calc() {
     R.F4 = T.F4 + (F.F4 * 16 / 116);
 
     // УПРОЩЕНКА (х2 маржа при 1.35 + динамический рост налогов)
-    var simpMarkupFactor = 2.90 / 1.35; // 290 ₸ при 1.35
+    var simpMarkupFactor = 2.90 / 1.35;
     F.markup_simp = markup * simpMarkupFactor;
-    var hiddenIncomeK = 1.130604; // Скрытый доход 13.06%
+    var hiddenIncomeK = 1.130604;
 
     F.F4_simp = T.F4_simp * F.markup_simp;
     let vat_f4_simp = F.F4_simp * 16 / 116;
