@@ -1,414 +1,182 @@
-// ==============================================================
-// КАТАЛОГ ПРОДУКЦИИ БАННЕРОВО ДЛЯ ВКЛАДКИ "ПРОДУКЦИЯ / ПАКЕТЫ"
-// ==============================================================
+// ==============================================================================
+// БАЗА ДАННЫХ И ТАРИФЫ: БАННЕРОВО (БП) С ТИРАЖНЫМИ СЕТКАМИ (С НДС)
+// ==============================================================================
+
+function getBannerovoTierPrice(tiers, val) {
+    if (!tiers || !tiers.length) return 0;
+    let t = tiers.find(item => val <= item.max);
+    return t ? t.p : tiers[tiers.length - 1].p;
+}
+
+// Фабрика для широкоформатной печати (расчет цены за м² в зависимости от общей квадратуры)
+function createSquareProduct(id, name, keywords, tiersRaw, defaultW, defaultH) {
+    let tierLimits = [10, 20, 50, 100, 200, Infinity];
+    let tiers = tiersRaw.map((p, idx) => ({ max: tierLimits[idx], p: p }));
+    
+    let prod = {
+        id: id,
+        supplier: 'bannerovo',
+        supplierName: 'Баннерово',
+        name: name,
+        keywords: keywords.toLowerCase() + ' баннерово bannerovo',
+        isSquareArea: true,
+        deliveryCost: 3000,
+        defaultQty: 1,
+        defaultW: defaultW || 1000,
+        defaultH: defaultH || 2000,
+        tiers: tiers
+    };
+
+    Object.defineProperty(prod, 'pricePerM2', {
+        get: function() {
+            let w = Number($('#ppCustomW').val()) || this.defaultW || 1000;
+            let h = Number($('#ppCustomH').val()) || this.defaultH || 2000;
+            let q = Number($('tr.row-propaket input[name="C5"]:visible').val()) || 1;
+            let totalM2 = (w / 1000) * (h / 1000) * q;
+            return getBannerovoTierPrice(this.tiers, totalM2);
+        },
+        configurable: true,
+        enumerable: true
+    });
+
+    return prod;
+}
+
+// Фабрика для конструкций (расчет цены за штуку в сборе в зависимости от тиража)
+function createConstructionProduct(id, name, keywords, tiersRaw, sizeLabel, w, h) {
+    let tierLimits = [4, 10, 30, 100, 200, Infinity];
+    let tiers = tiersRaw.length === 2 
+        ? [{ max: 4, p: tiersRaw[0] }, { max: Infinity, p: tiersRaw[1] }]
+        : tiersRaw.map((p, idx) => ({ max: tierLimits[idx], p: p }));
+
+    let sizeKey = sizeLabel || "Стандарт";
+    let sizeObj = {
+        w: w || 0,
+        h: h || 0,
+        tiers: tiers
+    };
+
+    Object.defineProperty(sizeObj, 'price', {
+        get: function() {
+            let q = Number($('tr.row-propaket input[name="C5"]:visible').val()) || 1;
+            return getBannerovoTierPrice(this.tiers, q);
+        },
+        configurable: true,
+        enumerable: true
+    });
+
+    let sizes = {};
+    sizes[sizeKey] = sizeObj;
+
+    return {
+        id: id,
+        supplier: 'bannerovo',
+        supplierName: 'Баннерово',
+        name: name,
+        keywords: keywords.toLowerCase() + ' баннерово bannerovo конструкция',
+        isConstruction: true,
+        deliveryCost: 3000,
+        defaultQty: 1,
+        sizes: sizes
+    };
+}
 
 const bannerovoCatalog = [
-    // --- 1. СОЛЬВЕНТНАЯ ПЕЧАТЬ (квадратура, с НДС) ---
-    {
-        id: 'bn_solv_340',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннер 340г Китай (сольвент)',
-        keywords: 'баннер 340 китай сольвент наружная баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 950,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_440',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннер 440г ламинированный (сольвент)',
-        keywords: 'баннер 440 ламинированный сольвент наружная баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1250,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_510',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннер 510г литой (сольвент)',
-        keywords: 'баннер 510 литой прочный сольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1850,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_mesh',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннерная сетка Mesh (сольвент)',
-        keywords: 'сетка баннерная mesh сольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1750,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_film',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Самоклеящаяся пленка (сольвент)',
-        keywords: 'пленка самоклейка оракал сольвент наружка баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1400,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_perfo',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Перфорированная пленка One Way Vision (сольвент)',
-        keywords: 'перфопленка перфорированная окна витрины сольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2300,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_solv_blueback',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Бумага Blueback (сольвент)',
-        keywords: 'бумага блюбэк blueback биллборды сольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 850,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
+    // =========================================================================
+    // 1. СОЛЬВЕНТНАЯ ПЕЧАТЬ (м²: 1-10, 11-20, 21-50, 51-100, 101-200, 201+)
+    // =========================================================================
+    createSquareProduct('bn_solv_340', 'Баннер 340г (сольвент)', 'баннер 340 китай сольвент наружка', [2440, 2140, 1940, 1730, 1530, 1430]),
+    createSquareProduct('bn_solv_400', 'Баннер 400г (сольвент)', 'баннер 400 сольвент наружка', [2820, 2700, 2450, 2200, 1950, 1760]),
+    createSquareProduct('bn_solv_backlit_400', 'Баннер Бэклит 400гр (сольвент)', 'баннер бэклит 400гр 400 короб подсветка сольвент', [3400, 3250, 2950, 2650, 2340, 2120]),
+    createSquareProduct('bn_solv_blackout_340', 'Баннер BlackOut 340гр (сольвент)', 'баннер blackout блэкаут светонепроницаемый 340гр сольвент', [2730, 2500, 2320, 2150, 1970, 1740]),
+    createSquareProduct('bn_solv_blackout_440', 'Баннер BlackOut с серой подложкой 440гр (сольвент)', 'баннер blackout блэкаут серая подложка 440гр 440 сольвент', [3400, 3250, 2950, 2650, 2340, 2120]),
+    createSquareProduct('bn_solv_cast_510', 'Баннер литой 510г (сольвент)', 'баннер литой 510 прочный фасад сольвент', [5610, 5200, 4920, 4520, 4250, 3970]),
+    createSquareProduct('bn_solv_cast_550', 'Баннер литой 550г (сольвент)', 'баннер литой 550 плотный тяжелый сольвент', [3980, 3690, 3500, 3210, 3010, 2810]),
+    createSquareProduct('bn_solv_oracal_140', 'Оракал 140гр (сольвент)', 'оракал 140гр 140 пленка самоклейка сольвент', [2860, 2670, 2470, 2270, 2070, 1870]),
+    createSquareProduct('bn_solv_oracal_perfo', 'Оракал перфорированный (сольвент)', 'оракал перфорированный перфопленка окна витрины сольвент', [4150, 3840, 3530, 3320, 3110, 2910]),
+    createSquareProduct('bn_solv_mesh', 'Баннерная сетка (сольвент)', 'баннерная сетка mesh меш фасад продуваемая сольвент', [2940, 2720, 2510, 2290, 2150, 2000]),
 
-    // --- 2. ЭКОСОЛЬВЕНТНАЯ ПЕЧАТЬ (интерьерная 1440 dpi, с НДС) ---
-    {
-        id: 'bn_eco_440',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннер интерьерный 440г (экосольвент)',
-        keywords: 'баннер интерьерный 440 экосольвент 1440 dpi баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1500,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_510',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Баннер литой интерьерный 510г (экосольвент)',
-        keywords: 'баннер интерьерный литой 510 экосольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2200,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_film',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Пленка самоклеящаяся глянец/мат (экосольвент)',
-        keywords: 'пленка интерьерная оракал наклейки глянцевая матовая экосольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1650,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_perfo',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Перфорированная пленка интерьерная (экосольвент)',
-        keywords: 'перфорированная пленка интерьерная витрины экосольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2600,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_film_lam',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Пленка с защитной ламинацией (экосольвент)',
-        keywords: 'пленка с ламинацией напольная ламинат экосольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2450,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_backlit',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Бэклит (Backlit) светорассеивающий (экосольвент)',
-        keywords: 'бэклит световой короб лайтбокс backlit экосольвент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2900,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_eco_canvas',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Холст синтетический (экосольвент)',
-        keywords: 'холст синтетический экосольвент картина баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 3400,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
+    // =========================================================================
+    // 2. ЭКО-СОЛЬВЕНТНАЯ ПЕЧАТЬ (м²: 1-10, 11-20, 21-50, 51-100, 101-200, 201+)
+    // =========================================================================
+    createSquareProduct('bn_eco_wallpaper', 'Обои (ADM - YD3201) (экосольвент)', 'обои yd3201 бесшовные фреска интерьер экосольвент', [6090, 5670, 5260, 4840, 4480, 4060]),
+    createSquareProduct('bn_eco_coated_paper', 'Меловка 150гр (экосольвент)', 'меловка мелованная бумага 150гр 150 постер экосольвент', [3070, 2760, 2550, 2290, 2140, 1980]),
+    createSquareProduct('bn_eco_oracal_black_back', 'Оракал с черным оборотом (экосольвент)', 'оракал черный оборот блэкаут пленка экосольвент', [3800, 3540, 3330, 3070, 2660, 2500]),
+    createSquareProduct('bn_eco_oracal_strong_glue', 'Оракал с усиленным клеем (экосольвент)', 'оракал усиленный клей сложная поверхность экосольвент', [3640, 3380, 3230, 2920, 2760, 2550]),
+    createSquareProduct('bn_eco_oracal_140', 'Оракал 140гр (экосольвент)', 'оракал 140гр 140 наклейки интерьерная печать экосольвент', [3380, 3180, 2920, 2660, 2500, 2290]),
+    createSquareProduct('bn_eco_oracal_air_channels', 'Оракал с воздушными каналами (экосольвент)', 'оракал воздушные каналы легкая поклейка экосольвент', [4740, 4370, 4110, 3750, 3540, 3280]),
+    createSquareProduct('bn_eco_electrostatic_vinyl', 'Электростатический винил (ADM - NZ7311) (экосольвент)', 'электростатический винил прилипала без клея nz7311 экосольвент', [5100, 4740, 4480, 4110, 3850, 3590]),
+    createSquareProduct('bn_eco_fabric_silk', 'Ткань/шелк Эко (ADM - NT141012) (экосольвент)', 'ткань шелк nt141012 текстиль экосольвент', [3070, 2860, 2710, 2500, 2340, 2190]),
+    createSquareProduct('bn_eco_flag_fabric', 'Флажная ткань перфорированная (экосольвент)', 'флажная ткань перфорированная флаг сетка экосольвент', [5100, 4740, 4480, 4110, 3850, 3590]),
+    createSquareProduct('bn_eco_plastic_300', 'Пластик Эко 300 (ADM - PVC30012) (экосольвент)', 'пластик эко 300 pvc30012 тонкий пластик экосольвент', [4840, 4530, 4010, 3800, 3380, 3230]),
+    createSquareProduct('bn_eco_plastic_400', 'Пластик Эко 400 (ADM - PVC400-12) (экосольвент)', 'пластик эко 400 pvc400-12 плотный пластик экосольвент', [7390, 6920, 6140, 5780, 5200, 4890]),
+    createSquareProduct('bn_eco_film_gray_back', 'Пленка с серой подложкой для RollUp (ADM - NZ5410914)', 'пленка серая подложка роллап rollup nz5410914 полотно экосольвент', [4680, 4320, 4110, 3750, 3490, 3280]),
+    createSquareProduct('bn_eco_backlit', 'Бэклит Эко (ADM - VPPP12) (экосольвент)', 'бэклит эко vppp12 лайтбокс световой короб экосольвент', [3900, 3640, 3280, 3070, 2760, 2600]),
+    createSquareProduct('bn_eco_canvas', 'Холст (ADM - 680CAG1218) (экосольвент)', 'холст картина 680cag1218 холст на подрамник экосольвент', [9260, 8640, 7700, 7230, 6500, 6140]),
+    createSquareProduct('bn_eco_magnetic_04', 'Магнитная пленка 0,4мм (экосольвент)', 'магнитная пленка 0.4 0,4мм магнит на авто экосольвент', [13420, 12540, 11130, 10460, 9420, 8900]),
+    createSquareProduct('bn_eco_magnetic_08', 'Магнитная пленка 0,8мм (экосольвент)', 'магнитная пленка 0.8 0,8мм толстый магнит экосольвент', [27100, 25330, 22520, 21120, 19040, 17940]),
 
-    // --- 3. ПИГМЕНТНАЯ ПЕЧАТЬ (с НДС) ---
-    {
-        id: 'bn_pigm_photo',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Фотобумага 180-230г (пигмент)',
-        keywords: 'фотобумага плакат постер фото пигментная пигмент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 2900,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_pigm_canvas',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Холст натуральный 380г (пигмент)',
-        keywords: 'холст натуральный 380 картина музейный пигмент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 4800,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_pigm_backlit',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Бэклит светорассеивающий (пигмент)',
-        keywords: 'бэклит пигмент световой короб плафон баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 3600,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_pigm_watman',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Чертежи / Ватман (пигмент)',
-        keywords: 'чертеж ватман схемы проекты пигмент баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 1600,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
+    // =========================================================================
+    // 3. ПИГМЕНТНАЯ ПЕЧАТЬ (м²: 1-10, 11-20, 21-50, 51-100, 101-200, 201+)
+    // =========================================================================
+    createSquareProduct('bn_pigm_plastic_260', 'Пластик пигмент 260гр (ADM - ZF11)', 'пластик пигмент 260гр zf11 интерьерная печать', [3850, 3540, 3330, 2970, 2760, 2550]),
+    createSquareProduct('bn_pigm_backlit_zf14', 'Бэклит (ADM BF03 - ZF14) (пигмент)', 'бэклит bf03 zf14 плафон световой пигмент', [3440, 3120, 2920, 2660, 2450, 2240]),
+    createSquareProduct('bn_pigm_backlit_zf18', 'Бэклит 180G 280гр (ADM WP-180PET - ZF18)', 'бэклит 180g 280гр wp-180pet zf18 плотный бэклит пигмент', [5260, 4790, 4480, 4060, 3750, 3440]),
+    createSquareProduct('bn_pigm_photo_paper', 'Фотобумага Пигмент (ADM PH-230GN - ZF50)', 'фотобумага пигмент ph-230gn zf50 постер фото плакат', [3490, 3230, 3020, 2710, 2500, 2290]),
+    createSquareProduct('bn_pigm_vinyl_140', 'Винил для пигментной печати 140гр HP (ADM - ZF04)', 'винил пигмент 140гр hp zf04 самоклейка пигментная', [2920, 2660, 2500, 2240, 2080, 1930]),
+    createSquareProduct('bn_pigm_canvas', 'Холст (ADM - 680CAG1218) (пигмент)', 'холст пигмент 680cag1218 художественный холст репродукция', [8320, 7600, 7130, 6400, 5930, 5460]),
+    createSquareProduct('bn_pigm_fabric_silk', 'Ткань/шелк Пигмент (ADM - WP150BFM)', 'ткань шелк пигмент wp150bfm текстиль интерьер', [3960, 3640, 3380, 3070, 2810, 2600]),
 
-    // --- 4. УФ-ПЕЧАТЬ (квадратура, с НДС) ---
-    {
-        id: 'bn_uv_pvc3',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: ПВХ пластик 3 мм',
-        keywords: 'уф печать пвх пластик 3мм 3 мм табличка баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 4800,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_uv_pvc5',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: ПВХ пластик 5 мм',
-        keywords: 'уф печать пвх пластик 5мм 5 мм вывеска баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 6200,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_uv_acryl',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: Акрил / Оргстекло',
-        keywords: 'уф печать акрил оргстекло прозрачный глянец баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 7800,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_uv_composite',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: Алюмокомпозит',
-        keywords: 'уф печать композит алюмокомпозит фасад таблички баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 7200,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_uv_foam',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: Пенокартон',
-        keywords: 'уф печать пенокартон легкий стенд баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 5600,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 1000,
-        deliveryCost: 3000
-    },
-    {
-        id: 'bn_uv_roll',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'УФ-печать: Рулонная (пленка / баннер / бэклит)',
-        keywords: 'уф печать рулонная пленка баннер бэклит баннерово bannerovo',
-        isSquareArea: true,
-        pricePerM2: 3500,
-        defaultQty: 1,
-        defaultW: 1000,
-        defaultH: 2000,
-        deliveryCost: 3000
-    },
+    // =========================================================================
+    // 4. УФ ПЕЧАТЬ (м²: 1-10, 11-20, 21-50, 51-100, 101-200, 201+)
+    // =========================================================================
+    createSquareProduct('bn_uv_oracal_clear', 'УФ-печать: Оракал прозрачный', 'уф печать оракал прозрачный пленка', [6870, 5930, 5520, 5200, 4890, 4630]),
+    createSquareProduct('bn_uv_oracal_clear_white_1s', 'УФ-печать: Оракал прозрачный + белила (1 сторона)', 'уф печать оракал прозрачный белила односторонняя', [10400, 9000, 8430, 7910, 7440, 7020]),
+    createSquareProduct('bn_uv_oracal_clear_white_2s', 'УФ-печать: Оракал прозрачный + белила (2 стороны)', 'уф печать оракал прозрачный белила двухсторонняя 2 стороны', [12480, 10770, 10090, 9470, 8900, 8380]),
+    createSquareProduct('bn_uv_reflective_film', 'УФ-печать: Светоотражающая пленка (ADM - RF06)', 'уф печать светоотражающая пленка rf06 дорожные знаки', [14300, 12380, 11550, 10870, 10200, 9620]),
+    createSquareProduct('bn_uv_canvas', 'УФ-печать: Холст (ADM - 680CAG1218)', 'уф печать холст 680cag1218 картина премиум', [15140, 13110, 12220, 11500, 10770, 10200]),
+    createSquareProduct('bn_uv_banner_340', 'УФ-печать: Баннер 340г', 'уф печать баннер 340г 340', [5780, 5000, 4630, 4370, 4110, 3900]),
+    createSquareProduct('bn_uv_banner_510', 'УФ-печать: Баннер литой 510г', 'уф печать баннер литой 510г 510', [10250, 8900, 8270, 7800, 7280, 6920]),
+    createSquareProduct('bn_uv_banner_550', 'УФ-печать: Баннер литой 550г', 'уф печать баннер литой 550г 550', [8170, 7080, 6610, 6190, 5830, 5520]),
+    createSquareProduct('bn_uv_corrugated_cardboard', 'УФ-печать: Гофрокартон L3', 'уф печать гофрокартон l3 картон упаковка коробка', [6970, 6040, 5620, 5310, 4940, 4680]),
+    createSquareProduct('bn_uv_micro_corrugated', 'УФ-печать: Микро-гофрокартон L3', 'уф печать микрогофрокартон микро гофрокартон l3', [6560, 5670, 5310, 5000, 4680, 4420]),
+    createSquareProduct('bn_uv_magnetic_06', 'УФ-печать: Магнитная пленка 0,6мм', 'уф печать магнитная пленка 0.6 0,6мм магнит', [19040, 18050, 17110, 16180, 15240, 14250]),
+    createSquareProduct('bn_uv_lightbox_fabric', 'УФ-печать: Ткань для лайтбоксов', 'уф печать ткань для лайтбоксов световой короб текстиль', [10510, 9880, 9310, 8950, 8480, 7800]),
+    createSquareProduct('bn_uv_fabric_rubber', 'Резинка для ткани + прошивка', 'резинка для ткани прошивка лайтбокс профиль периметр', [680, 630, 580, 580, 520, 520], 1000, 1000),
 
-    // --- 5. МОБИЛЬНЫЕ КОНСТРУКЦИИ (чистый прайс, с НДС) ---
-    {
-        id: 'bn_cn_spider',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'X-баннер "Паук" (конструкция)',
-        keywords: 'паук х-баннер x-banner х баннер паучок 60х160 80х180 120х200 баннерово bannerovo конструкция',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "600x1600 мм (60х160 см)": { w: 600, h: 1600, price: 2800 },
-            "800x1800 мм (80х180 см)": { w: 800, h: 1800, price: 3400 },
-            "1200x2000 мм (120х200 см)": { w: 1200, h: 2000, price: 5000 }
-        }
-    },
-    {
-        id: 'bn_cn_rollup',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Roll-Up стандарт (конструкция)',
-        keywords: 'роллап ролл ап rollup roll up 80х200 85х200 100х200 120х200 150х200 баннерово bannerovo конструкция стенд',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "800x2000 мм (80х200 см)": { w: 800, h: 2000, price: 5800 },
-            "850x2000 мм (85х200 см)": { w: 850, h: 2000, price: 6200 },
-            "1000x2000 мм (100х200 см)": { w: 1000, h: 2000, price: 7400 },
-            "1200x2000 мм (120х200 см)": { w: 1200, h: 2000, price: 8900 },
-            "1500x2000 мм (150х200 см)": { w: 1500, h: 2000, price: 11500 }
-        }
-    },
-    {
-        id: 'bn_cn_rollup_lux',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Roll-Up Капля Люкс (конструкция)',
-        keywords: 'роллап капля люкс каплевидный premium rollup 85х200 баннерово bannerovo',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "850x2000 мм (85х200 см)": { w: 850, h: 2000, price: 13000 }
-        }
-    },
-    {
-        id: 'bn_cn_promostol',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Промостол (конструкция)',
-        keywords: 'промостол промостойка пластиковый с фризом дегустация алюминиевый ресепшн баннерово bannerovo конструкция',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "Пластиковый с фризом": { w: 800, h: 1900, price: 23000 },
-            "Алюминиевый с полкой": { w: 850, h: 900, price: 29000 }
-        }
-    },
-    {
-        id: 'bn_cn_presswall',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Пресс-волл Joker каркас (конструкция)',
-        keywords: 'пресс волл прессволл press wall joker джокер 2х2 2х3 3х3 каркас баннерово bannerovo',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "2000x2000 мм (2х2 м)": { w: 2000, h: 2000, price: 19000 },
-            "3000x2000 мм (3х2 м)": { w: 3000, h: 2000, price: 23000 },
-            "3000x3000 мм (3х3 м)": { w: 3000, h: 3000, price: 27000 }
-        }
-    },
-    {
-        id: 'bn_cn_shtender',
-        supplier: 'bannerovo',
-        supplierName: 'Баннерово',
-        name: 'Штендер двухсторонний (каркас)',
-        keywords: 'штендер арочный прямоугольный раскладушка баннерово bannerovo конструкция',
-        isConstruction: true,
-        deliveryCost: 3000,
-        defaultQty: 1,
-        sizes: {
-            "600x1200 мм (арочный / прямоуг.)": { w: 600, h: 1200, price: 13000 }
-        }
-    }
+    // =========================================================================
+    // 5. МОБИЛЬНЫЕ КОНСТРУКЦИИ (ROLL-UP) (шт: 1-4, 5-10, 11-30, 31-100, 101-200, 201+)
+    // =========================================================================
+    createConstructionProduct('bn_ru_08_pigment', 'RollUp 0,8*2м, стандарт - Пластик пигмент', 'роллап rollup 0.8 0,8 2м стандарт пластик пигмент', [24180, 23040, 21900, 20750, 19610, 18460], '0,8*2м (в сборе, пигмент)', 800, 2000),
+    createConstructionProduct('bn_ru_12_pigment', 'RollUp 1,2*2м, стандарт - Пластик пигмент', 'роллап rollup 1.2 1,2 2м стандарт пластик пигмент', [36820, 34950, 33130, 32190, 31310, 30370], '1,2*2м (в сборе, пигмент)', 1200, 2000),
+    createConstructionProduct('bn_ru_15_pigment', 'RollUp 1,5*2м, стандарт - Пластик пигмент', 'роллап rollup 1.5 1,5 2м стандарт пластик пигмент', [51380, 48780, 46230, 44930, 43680, 42380], '1,5*2м (в сборе, пигмент)', 1500, 2000),
+    createConstructionProduct('bn_ru_085_prem_pigment', 'RollUp 0,85*2м, премиум - Пластик пигмент', 'роллап rollup 0.85 0,85 2м премиум капля каплевидный люкс пластик пигмент', [57260, 54240, 51220, 49720, 48210, 45190], '0,85*2м (премиум капля, пигмент)', 850, 2000),
+    createConstructionProduct('bn_ru_08_eco', 'RollUp 0,8*2м, стандарт - Пластик Эко', 'роллап rollup 0.8 0,8 2м стандарт пластик эко экосольвент', [23870, 22730, 21580, 20440, 19350, 18200], '0,8*2м (в сборе, эко)', 800, 2000),
+    createConstructionProduct('bn_ru_12_eco', 'RollUp 1,2*2м, стандарт - Пластик Эко', 'роллап rollup 1.2 1,2 2м стандарт пластик эко экосольвент', [36350, 34530, 32710, 31780, 30890, 30010], '1,2*2м (в сборе, эко)', 1200, 2000),
+    createConstructionProduct('bn_ru_15_eco', 'RollUp 1,5*2м, стандарт - Пластик Эко', 'роллап rollup 1.5 1,5 2м стандарт пластик эко экосольвент', [50760, 48260, 45710, 44410, 43160, 41920], '1,5*2м (в сборе, эко)', 1500, 2000),
+    createConstructionProduct('bn_ru_085_prem_eco', 'RollUp 0,85*2м, премиум - Пластик Эко', 'роллап rollup 0.85 0,85 2м премиум капля каплевидный люкс пластик эко', [56940, 53980, 50960, 49460, 47950, 44980], '0,85*2м (премиум капля, эко)', 850, 2000),
+
+    // =========================================================================
+    // 6. X-BANNER / ПАУЧКИ (шт: 1-4, 5-10, 11-30, 31-100, 101-200, 201+)
+    // =========================================================================
+    createConstructionProduct('bn_xb_06_photo', 'X-Banner (паучек) 0,6*1,6м - Фотобумага пигмент', 'паук паучек x-banner х-баннер 0.6 0,6 1.6 1,6м фотобумага пигмент', [10610, 9830, 9000, 8580, 8170, 7750], '0,6*1,6м (фотобумага)', 600, 1600),
+    createConstructionProduct('bn_xb_08_photo', 'X-Banner (паучек) 0,8*1,8м - Фотобумага пигмент', 'паук паучек x-banner х-баннер 0.8 0,8 1.8 1,8м фотобумага пигмент', [12950, 11960, 10980, 10460, 9990, 9470], '0,8*1,8м (фотобумага)', 800, 1800),
+    createConstructionProduct('bn_xb_12_photo', 'X-Banner (паучек) 1,2*2м - Фотобумага пигмент', 'паук паучек x-banner х-баннер 1.2 1,2 2м фотобумага пигмент', [18570, 17160, 15710, 15030, 14300, 13580], '1,2*2м (фотобумага)', 1200, 2000),
+    createConstructionProduct('bn_xb_table_photo', 'X-Banner (паучек) настольный 0,22*0,4м - Фотобумага пигмент', 'паук паучек настольный мини 0.22 0,22 0.4 0,4м фотобумага пигмент', [1390, 1320, 1230, 1160, 1080, 990], '0,22*0,4м (настольный, фотобумага)', 220, 400),
+    createConstructionProduct('bn_xb_06_eco', 'X-Banner (паучек) 0,6*1,6м - Пластик Эко (без лам.)', 'паук паучек x-banner х-баннер 0.6 0,6 1.6 1,6м пластик эко без ламинации', [10660, 9830, 9050, 8640, 8220, 7800], '0,6*1,6м (пластик эко)', 600, 1600),
+    createConstructionProduct('bn_xb_08_eco', 'X-Banner (паучек) 0,8*1,8м - Пластик Эко (без лам.)', 'паук паучек x-banner х-баннер 0.8 0,8 1.8 1,8м пластик эко без ламинации', [13060, 12020, 11030, 10560, 10040, 9520], '0,8*1,8м (пластик эко)', 800, 1800),
+    createConstructionProduct('bn_xb_12_eco', 'X-Banner (паучек) 1,2*2м - Пластик Эко (без лам.)', 'паук паучек x-banner х-баннер 1.2 1,2 2м пластик эко без ламинации', [18720, 17270, 15810, 15140, 14410, 13680], '1,2*2м (пластик эко)', 1200, 2000),
+    createConstructionProduct('bn_xb_table_eco', 'X-Banner (паучек) настольный 0,22*0,4м - Пластик', 'паук паучек настольный мини 0.22 0,22 0.4 0,4м пластик пигмент ламинация эко', [1400, 1320, 1240, 1160, 1080, 1000], '0,22*0,4м (настольный, пластик)', 220, 400),
+
+    // =========================================================================
+    // 7. ПРЕСС-СТЕНЫ И ВЫСТАВОЧНЫЕ СТЕНДЫ POP UP (шт: 1-4, 5+)
+    // =========================================================================
+    createConstructionProduct('bn_popup_curve_promo', 'Pop Up премиум с промостолом 2,3*3м, изогнутый', 'pop up поп ап премиум промостол 2.3 2,3 3м изогнутый выставочный стенд', [380750, 359580], '2,3*3м (изогнутый + промостол)', 3000, 2300),
+    createConstructionProduct('bn_popup_velcro_straight', 'POP Up 2,2м*3м липучка ПРЯМОЙ VELCRO 3*4', 'pop up поп ап липучка прямой velcro велкро 2.2 2,2 3м стенд фотозона', [318350, 304520], '2,2*3м (прямой velcro)', 3000, 2200),
+    createConstructionProduct('bn_popup_23_23_not_light', 'POP UP 2.3M*2,3M (3X3 SEG) для ткани мягкий чехол БЕЗ подсветки', 'pop up поп ап 2.3 2,3 тканевый без подсветки 3x3 seg стенд', [327140, 312260], '2,3*2,3м (тканевый без подсветки)', 2300, 2300),
+    createConstructionProduct('bn_popup_23_31_not_light', 'POP UP 2.3M*3,1M (3X4 SEG) для ткани мягкий чехол БЕЗ подсветки', 'pop up поп ап 2.3 3.1 2,3 3,1 тканевый без подсветки 3x4 seg стенд', [365510, 348920], '2,3*3,1м (тканевый без подсветки)', 3100, 2300),
+    createConstructionProduct('bn_popup_23_465_not_light', 'POP UP 2.3M*4,65M (3X6 SEG) для ткани мягкий чехол БЕЗ подсветки', 'pop up поп ап 2.3 4.65 2,3 4,65 тканевый без подсветки 3x6 seg стенд', [571900, 545900], '2,3*4,65м (тканевый без подсветки)', 4650, 2300),
+    createConstructionProduct('bn_popup_23_23_light', 'POP UP 2.3M*2,3M (3X3 SEG) для ткани мягкий чехол С подсветкой', 'pop up поп ап 2.3 2,3 тканевый с подсветкой светящийся 3x3 seg лайтбокс', [552870, 523750], '2,3*2,3м (тканевый С подсветкой)', 2300, 2300),
+    createConstructionProduct('bn_popup_23_31_light', 'POP UP 2.3M*3,1M (3X4 SEG) для ткани мягкий чехол С подсветкой', 'pop up поп ап 2.3 3.1 2,3 3,1 тканевый с подсветкой светящийся 3x4 seg лайтбокс', [687340, 651200], '2,3*3,1м (тканевый С подсветкой)', 3100, 2300),
+    createConstructionProduct('bn_popup_23_465_light', 'POP UP 2.3M*4,65M (3X6 SEG) для ткани мягкий чехол С подсветкой', 'pop up поп ап 2.3 4.65 2,3 4,65 тканевый с подсветкой светящийся 3x6 seg лайтбокс', [1012030, 958780], '2,3*4,65м (тканевый С подсветкой)', 4650, 2300)
 ];
