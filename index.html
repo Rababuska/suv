@@ -66,7 +66,6 @@
         .kp-badge-btn { margin-left: 8px; color: #dc3545; background: none; border: none; font-weight: bold; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; }
         .option-label { cursor: pointer; margin-right: 20px; font-size: 13px; }
 
-        /* Подсветка ошибок ввода */
         .input-error {
             border: 1.5px solid #dc3545 !important;
             background-color: #fff0f1 !important;
@@ -85,7 +84,7 @@
     <div class="supplier-panel" id="main-supplier-panel">
         <strong>Нанесение 1:</strong>
         <div class="search-box-wrap">
-            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (баннеры, пленка, роллап, паук, УФ, гравировка)..." autocomplete="off">
+            <input type="text" id="serviceSearch" class="search-input" placeholder="Поиск услуги (ручки, УФ, гравировка, блокноты, тиснение)..." autocomplete="off">
             <div id="searchResults" class="search-results"></div>
         </div>
 
@@ -109,13 +108,6 @@
                     </span>
                 </span>
                 <button type="button" id="addDtfPoint" style="font-size: 11px; cursor: pointer;">+ точка</button>
-            </span>
-
-            <span id="bannerovoParams" style="display: none;">
-                Размер печати (мм): 
-                <input type="number" id="bannerW" class="mm-input" style="width: 60px;" value="1000" min="0" step="10"> x 
-                <input type="number" id="bannerH" class="mm-input" style="width: 60px;" value="2000" min="0" step="10">
-                <span id="bannerAreaOut" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 5px;">(2.00 м²)</span>
             </span>
         </div>
         
@@ -164,13 +156,6 @@
                 </span>
                 <button type="button" id="addDtfPoint2" style="font-size: 11px; cursor: pointer;">+ точка</button>
             </span>
-
-            <span id="bannerovoParams2" style="display: none;">
-                Размер печати (мм): 
-                <input type="number" id="bannerW2" class="mm-input" style="width: 60px;" value="1000" min="0" step="10"> x 
-                <input type="number" id="bannerH2" class="mm-input" style="width: 60px;" value="2000" min="0" step="10">
-                <span id="bannerAreaOut2" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 5px;">(2.00 м²)</span>
-            </span>
         </div>
         
         <div class="delivery-checkbox" id="delivery-wrap2" style="display: none;">
@@ -188,7 +173,7 @@
         <div style="margin-bottom: 15px; position: relative;">
             <span style="display: inline-block; width: 110px;">Товар / тип:</span>
             <div class="search-box-wrap">
-                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, лента, майка, поставщик)..." autocomplete="off">
+                <input type="text" id="ppSearch" class="search-input" placeholder="Начните вводить (крафт, пвд, зип, коробки, баннер, паук, роллап)..." autocomplete="off">
                 <div id="ppSearchResults" class="search-results"></div>
             </div>
             <button type="button" id="clearSearch" style="padding: 5px 10px; margin-left: 8px; display: none; cursor: pointer;">✖ Сброс</button>
@@ -197,6 +182,13 @@
         <div id="sizeRow" style="margin-bottom: 15px; display: none;">
             <span style="display: inline-block; width: 110px;">Размер:</span>
             <select id="ppSize" style="min-width: 500px;"></select>
+        </div>
+
+        <div id="customAreaRow" style="margin-bottom: 15px; display: none;">
+            <span style="display: inline-block; width: 110px;">Размер (мм):</span>
+            <input type="number" id="ppCustomW" class="mm-input" style="width: 65px;" value="1000" min="0" step="10"> x 
+            <input type="number" id="ppCustomH" class="mm-input" style="width: 65px;" value="2000" min="0" step="10">
+            <span id="ppCustomAreaOut" style="color: #0056b3; font-weight: bold; font-size: 13px; margin-left: 8px;">(2.00 м²)</span>
         </div>
 
         <div id="colorRow" style="margin-bottom: 15px; display: none;">
@@ -377,6 +369,14 @@
                 <td></td>
                 <td>Расходы без НДС</td>
                 <td><input name="F4" value="0" type="text">₸ </td>
+                <td></td><td></td><td></td>
+            </tr>
+
+            <tr class="row-sklad" style="display: none;">
+                <td></td><td></td><td></td>
+                <td>Расходы нал</td>
+                <td><input name="F5" value="0" type="text">₸ </td>
+                <td></td><td></td><td></td>
             </tr>
 
             <tr class="row-order">
@@ -500,7 +500,6 @@ var activeService2 = null;
 var selectedProduct = null;
 var kpItems = []; 
 
-// Строгая проверка чисел: запрещены запятые, пробелы, буквы
 function checkStrictNum($input, defaultVal) {
     if (!$input || !$input.length) return defaultVal !== undefined ? defaultVal : 0;
     let str = $input.val();
@@ -517,9 +516,6 @@ function checkStrictNum($input, defaultVal) {
     return Number(trimmed);
 }
 
-// Реестр дополнительных поставщиков упаковки
-var extraSuppliersCatalog = [];
-
 function getCombinedProductsCatalog() {
     let list = [];
     if (typeof propaketCatalog !== 'undefined' && Array.isArray(propaketCatalog)) {
@@ -528,32 +524,23 @@ function getCombinedProductsCatalog() {
                 ...p,
                 supplier: p.supplier || 'propaket',
                 supplierName: p.supplierName || 'PROPAKET',
-                deliveryCost: p.deliveryCost !== undefined ? p.deliveryCost : 3000,
-                calcFn: p.calcFn || function(prod, sizeKey, qty, front, back, handle, bow, inside) {
-                    if (typeof calculatePropaketItem === 'function') {
-                        return calculatePropaketItem(prod, sizeKey, qty, front, back, handle, bow, inside);
-                    }
-                    return { cost: 0, unitPrice: 0, calcQty: qty };
-                }
+                deliveryCost: p.deliveryCost !== undefined ? p.deliveryCost : 3000
             });
         });
     }
-    if (typeof extraSuppliersCatalog !== 'undefined' && Array.isArray(extraSuppliersCatalog)) {
-        extraSuppliersCatalog.forEach(p => list.push(p));
+    if (typeof bannerovoCatalog !== 'undefined' && Array.isArray(bannerovoCatalog)) {
+        bannerovoCatalog.forEach(p => list.push(p));
     }
     return list;
 }
 
-// Общий каталог услуг умного поиска (Сувенирка + Баннерово)
 var servicesCatalog = [
-    // Рекламная кухня (с НДС)
     { id: 'kitch_small', supplier: 'kitchen', vat: true, keywords: 'уф печать ручки карандаши брелоки флешки зажигалки рекламная кухня kitchen китчен', name: 'УФ: Ручки, флешки, брелоки, мелочевка [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.small_items, q) },
     { id: 'kitch_badges', supplier: 'kitchen', vat: true, keywords: 'уф печать медали бейджи номерки рекламная кухня kitchen китчен', name: 'УФ: Медали, бейджи, номерки [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.badges_medals, q) },
     { id: 'kitch_diaries', supplier: 'kitchen', vat: true, keywords: 'уф печать ежедневники блокноты powerbank повербанки рекламная кухня kitchen китчен', name: 'УФ: Ежедневники, блокноты, повербанки А5 [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.diaries_powerbanks, q) },
     { id: 'kitch_bottles', supplier: 'kitchen', vat: true, keywords: 'уф печать термокружки термосы бокалы елочные шары рекламная кухня kitchen китчен', name: 'УФ: Термосы, термокружки, бокалы [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.bottles_mugs, q) },
     { id: 'kitch_cases', supplier: 'kitchen', vat: true, keywords: 'уф печать чехлы для смартфонов телефонов рекламная кухня kitchen китчен', name: 'УФ: Чехлы для смартфонов [Рекламная кухня]', fn: (q) => getTierPrice(kitchenPrices.phone_cases, q) },
 
-    // Квант: гравировка (с НДС)
     { id: 'kv_pens_metal', supplier: 'kvant', vat: true, keywords: 'гравировка ручки металл квант', name: 'Гравировка: Ручки (Металл) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_metal, q) },
     { id: 'kv_pens_plastic', supplier: 'kvant', vat: true, keywords: 'гравировка ручки пластик квант', name: 'Гравировка: Ручки (Пластик) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_plastic, q) },
     { id: 'kv_pens_glossy', supplier: 'kvant', vat: true, keywords: 'гравировка ручки глянец лак квант', name: 'Гравировка: Ручки (Глянцевые/лак) [Квант]', fn: (q) => getTierPrice(kvantPrices.pens_glossy, q) },
@@ -569,7 +556,6 @@ var servicesCatalog = [
     { id: 'kv_uv_notebooks', supplier: 'kvant', vat: true, keywords: 'уф печать блокноты ежедневники квант', name: 'УФ: Блокноты [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_notebooks, q) },
     { id: 'kv_uv_bottles', supplier: 'kvant', vat: true, keywords: 'уф печать термосы термокружки бутылки колонки квант', name: 'УФ: Термосы, кружки, бутылки, колонки [Квант]', fn: (q) => getTierPrice(kvantPrices.uv_bottles, q) },
 
-    // VIPLINE (без НДС)
     { id: 'vip_uv_pens', supplier: 'vipline', vat: false, keywords: 'уф печать ручки зажигалки брелоки флешки виплайн vipline', name: 'УФ: Ручки, зажигалки, брелоки, флешки [VIPLINE]', fn: (q) => getViplineDirect('uv', 'small_items', q) },
     { id: 'vip_uv_mugs', supplier: 'vipline', vat: false, keywords: 'уф печать кружки термосы бутылки плоские виплайн vipline', name: 'УФ: Кружки, термосы, бутылки (плоские) [VIPLINE]', fn: (q) => getViplineDirect('uv', 'bottles', q) },
     { id: 'vip_uv_notebooks', supplier: 'vipline', vat: false, keywords: 'уф печать блокноты ежедневники vipline виплайн', name: 'УФ: Ежедневники, блокноты [VIPLINE]', fn: (q) => getViplineDirect('uv', 'diaries', q) },
@@ -586,16 +572,11 @@ var servicesCatalog = [
     { id: 'vip_dtf_shirts', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf футболки текстиль виплайн vipline', name: 'ДТФ: Футболки до 10 см [VIPLINE]', fn: (q) => getViplineDirect('dtf', 'shirts_small', q) },
     { id: 'vip_dtf_area', supplier: 'vipline', vat: false, keywords: 'дтф печать dtf площадь размер миллиметры виплайн vipline', name: 'ДТФ: Расчет по площади (ввод мм) [VIPLINE]', isDtfArea: true, fn: (q) => calcDtfArea(q) },
 
-    // Эксклюзив (с НДС)
     { id: 'ex_notebook', supplier: 'exclusive', vat: true, keywords: 'тиснение блокноты ежедневники клише эксклюзив', name: 'Тиснение: Блокноты / Ежедневники [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_notebook', q) },
     { id: 'ex_sheet', supplier: 'exclusive', vat: true, keywords: 'тиснение листовая бумага клише эксклюзив', name: 'Тиснение: Листовая продукция [Эксклюзив]', isCliche: true, fn: (q) => calculateExclusive('emboss_sheet', q) },
     { id: 'ex_bags', supplier: 'exclusive', vat: true, keywords: 'высечка сборка пакеты бумажные эксклюзив', name: 'Высечка и сборка бумажных пакетов [Эксклюзив]', fn: (q) => calculateExclusive('bags', q) },
     { id: 'ex_cutting', supplier: 'exclusive', vat: true, keywords: 'высечка просто высечка эксклюзив', name: 'Высечка без пакетов [Эксклюзив]', fn: (q) => calculateExclusive('die_cutting', q) }
 ];
-
-if (typeof bannerovoServices !== 'undefined' && Array.isArray(bannerovoServices)) {
-    servicesCatalog.push(...bannerovoServices);
-}
 
 function getTierPrice(tiers, q) {
     if (!tiers) return 0;
@@ -659,11 +640,6 @@ function getService2Cost(q) {
             }
         });
         return Math.round(singleCost * q);
-    } else if (activeService2.isBannerovoArea) {
-        let w = Number($('#bannerW2').val()) || 0;
-        let h = Number($('#bannerH2').val()) || 0;
-        let area = (w / 1000) * (h / 1000);
-        return Math.round(area * activeService2.pricePerM2 * q);
     } else {
         return activeService2.fn(q);
     }
@@ -696,14 +672,10 @@ function getDeliveryDays(qty) {
 }
 
 const deliveryPriority = {
-    '5-7': 1, '7-8': 2, '7-9': 3, '9-10': 4, '9-11': 5, 'Уточнить у менеджера': 6
+    '2-4': 1, '3-5': 2, '5-7': 3, '7-8': 4, '7-9': 5, '9-10': 6, '9-11': 7, 'Уточнить у менеджера': 8
 };
 
-// ==============================================================
-// ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ
-// ==============================================================
 $(document).ready(function() {
-    // Переключение режимов
     $('#btn-order').click(function() {
         currentMode = 'order';
         $('.menu button').removeClass('active');
@@ -717,13 +689,17 @@ $(document).ready(function() {
         calc();
     });
 
+    // Режим СКЛАД (Алматы) — нанесение активно и доступно
     $('#btn-sklad').click(function() {
         currentMode = 'sklad';
         $('.menu button').removeClass('active');
         $(this).addClass('active');
         
-        $('#main-supplier-panel, #second-supplier-panel, #propaket-panel, #propaket-kp-block, .row-order, .row-propaket').hide();
-        $('.row-sklad, .row-shared').show();
+        $('#propaket-panel, #propaket-kp-block, .row-order, .row-propaket').hide();
+        $('#main-supplier-panel, .row-sklad, .row-shared').show();
+        if ($('#second-supplier-panel').data('open')) {
+            $('#second-supplier-panel').show();
+        }
         calc();
     });
 
@@ -740,7 +716,7 @@ $(document).ready(function() {
         calc();
     });
 
-    // Умный поиск продукции
+    // Умный поиск в каталоге ПРОДУКЦИЯ / ПАКЕТЫ
     $('#ppSearch').on('input focus', function() {
         let query = $(this).val().toLowerCase().trim();
         let $res = $('#ppSearchResults');
@@ -789,84 +765,116 @@ $(document).ready(function() {
             let dCost = selectedProduct.deliveryCost !== undefined ? selectedProduct.deliveryCost : 3000;
             $('#ppDeliveryLabel').text(`Включить доставку от ${sName} (${dCost.toLocaleString('ru-RU')} ₸)`);
 
-            let $size = $('#ppSize');
-            $size.empty();
-            if (selectedProduct.sizes) {
+            if (selectedProduct.isSquareArea) {
+                $('#sizeRow, #colorRow, #boxPrintRow, #extraOptionsRow').hide();
+                $('#customAreaRow').show();
+                $('#ppCustomW').val(selectedProduct.defaultW || 1000);
+                $('#ppCustomH').val(selectedProduct.defaultH || 2000);
+                updateCustomAreaBadge();
+            } 
+            else if (selectedProduct.isConstruction) {
+                $('#customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow').hide();
+                let $size = $('#ppSize');
+                $size.empty();
                 for (let sizeKey in selectedProduct.sizes) {
-                    let m = selectedProduct.sizes[sizeKey];
-                    let label = sizeKey;
-                    let parenMatch = sizeKey.match(/\((.+)\)/);
-                    let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
-
-                    if (selectedProduct.id === 'boxes') {
-                        label = `Длина: ${m.w} мм x Ширина: ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
-                    } else if (selectedProduct.id === 'ribbons' || selectedProduct.id === 'tissue') {
-                        label = sizeKey;
-                    } else if (m && m.d > 0) {
-                        label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
-                    } else if (m && m.w && m.h) {
-                        label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм${extraNote}`;
-                    }
-                    $size.append(new Option(label, sizeKey));
+                    let c = selectedProduct.sizes[sizeKey];
+                    $size.append(new Option(`${sizeKey} (${c.price.toLocaleString('ru-RU')} ₸)`, sizeKey));
                 }
                 $('#sizeRow').show();
-            } else {
-                $('#sizeRow').hide();
+            } 
+            else {
+                $('#customAreaRow').hide();
+                let $size = $('#ppSize');
+                $size.empty();
+                if (selectedProduct.sizes) {
+                    for (let sizeKey in selectedProduct.sizes) {
+                        let m = selectedProduct.sizes[sizeKey];
+                        let label = sizeKey;
+                        let parenMatch = sizeKey.match(/\((.+)\)/);
+                        let extraNote = parenMatch ? ` (${parenMatch[1]})` : '';
+
+                        if (selectedProduct.id === 'boxes') {
+                            label = `Длина: ${m.w} мм x Ширина: ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                        } else if (selectedProduct.id === 'ribbons' || selectedProduct.id === 'tissue') {
+                            label = sizeKey;
+                        } else if (m && m.d > 0) {
+                            label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм x Глубина: ${m.d} мм${extraNote}`;
+                        } else if (m && m.w && m.h) {
+                            label = `Ширина: ${m.w} мм x Длина (Высота): ${m.h} мм${extraNote}`;
+                        }
+                        $size.append(new Option(label, sizeKey));
+                    }
+                    $('#sizeRow').show();
+                } else {
+                    $('#sizeRow').hide();
+                }
+
+                $('#colorRow').show();
+
+                if (selectedProduct.id === 'ribbons') {
+                    $('#frontColorLabel').text('Цветов:');
+                    $('#ppFront').val(1).prop('disabled', true).hide();
+                    $('#backColorsWrap').hide();
+                    $('#ppBack').val(0);
+                    $('#ribbonColorNotice').show();
+                } else if (selectedProduct.id === 'boxes') {
+                    $('#frontColorLabel').text('Цветов на крышке (1-3):');
+                    $('#ppFront').val(1).prop('disabled', false).show();
+                    $('#backColorsWrap').hide();
+                    $('#ppBack').val(0);
+                    $('#ribbonColorNotice').hide();
+                } else if (selectedProduct.maxColors <= 1) {
+                    $('#frontColorLabel').text('Цветов спереди:');
+                    $('#ppFront').val(1).prop('disabled', true).show();
+                    $('#backColorsWrap').hide();
+                    $('#ppBack').val(0);
+                    $('#ribbonColorNotice').hide();
+                } else {
+                    $('#frontColorLabel').text('Цветов спереди (1-3):');
+                    $('#ppFront').val(1).prop('disabled', false).show();
+                    $('#backColorsWrap').show();
+                    $('#ppBack').val(0);
+                    $('#ribbonColorNotice').hide();
+                }
+
+                if (selectedProduct.id === 'boxes' || selectedProduct.hasInsidePrint) {
+                    $('#boxPrintRow').show();
+                    $('#ppBoxInside').val('none');
+                } else {
+                    $('#boxPrintRow').hide();
+                    $('#ppBoxInside').val('none');
+                }
+
+                const paperBags = ['paper_white_black', 'paper_color', 'paper_square', 'paper_fullcolor'];
+                if (paperBags.includes(selectedProduct.id) || selectedProduct.hasExtraOptions) {
+                    $('#extraOptionsRow').show();
+                } else {
+                    $('#extraOptionsRow').hide();
+                    $('#optHandle, #optBow').prop('checked', false);
+                }
             }
 
-            $('#colorRow').show();
-
-            if (selectedProduct.id === 'ribbons') {
-                $('#frontColorLabel').text('Цветов:');
-                $('#ppFront').val(1).prop('disabled', true).hide();
-                $('#backColorsWrap').hide();
-                $('#ppBack').val(0);
-                $('#ribbonColorNotice').show();
-            } else if (selectedProduct.id === 'boxes') {
-                $('#frontColorLabel').text('Цветов на крышке (1-3):');
-                $('#ppFront').val(1).prop('disabled', false).show();
-                $('#backColorsWrap').hide();
-                $('#ppBack').val(0);
-                $('#ribbonColorNotice').hide();
-            } else if (selectedProduct.maxColors <= 1) {
-                $('#frontColorLabel').text('Цветов спереди:');
-                $('#ppFront').val(1).prop('disabled', true).show();
-                $('#backColorsWrap').hide();
-                $('#ppBack').val(0);
-                $('#ribbonColorNotice').hide();
-            } else {
-                $('#frontColorLabel').text('Цветов спереди (1-3):');
-                $('#ppFront').val(1).prop('disabled', false).show();
-                $('#backColorsWrap').show();
-                $('#ppBack').val(0);
-                $('#ribbonColorNotice').hide();
-            }
-
-            if (selectedProduct.id === 'boxes' || selectedProduct.hasInsidePrint) {
-                $('#boxPrintRow').show();
-                $('#ppBoxInside').val('none');
-            } else {
-                $('#boxPrintRow').hide();
-                $('#ppBoxInside').val('none');
-            }
-
-            const paperBags = ['paper_white_black', 'paper_color', 'paper_square', 'paper_fullcolor'];
-            if (paperBags.includes(selectedProduct.id) || selectedProduct.hasExtraOptions) {
-                $('#extraOptionsRow').show();
-            } else {
-                $('#extraOptionsRow').hide();
-                $('#optHandle, #optBow').prop('checked', false);
-            }
-
-            $('tr.row-propaket input[name="C5"]').val(selectedProduct.defaultQty || 100);
+            $('tr.row-propaket input[name="C5"]').val(selectedProduct.defaultQty || 1);
             calc();
         }
+    });
+
+    function updateCustomAreaBadge() {
+        let w = Number($('#ppCustomW').val()) || 0;
+        let h = Number($('#ppCustomH').val()) || 0;
+        let area = (w / 1000) * (h / 1000);
+        $('#ppCustomAreaOut').text(`(${area.toFixed(2)} м²)`);
+    }
+
+    $('#ppCustomW, #ppCustomH').on('input change', function() {
+        updateCustomAreaBadge();
+        calc();
     });
 
     $('#clearSearch').click(function() {
         selectedProduct = null;
         $('#ppSearch').val('');
-        $('#clearSearch, #sizeRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
+        $('#clearSearch, #sizeRow, #customAreaRow, #colorRow, #boxPrintRow, #extraOptionsRow, #ppCostBadge, #btn-add-kp').hide();
         $('#optHandle, #optBow').prop('checked', false);
         $('#ppBoxInside').val('none');
         $('#ppDeliveryLabel').text('Включить доставку (3 000 ₸)');
@@ -895,80 +903,98 @@ $(document).ready(function() {
         calc();
     });
 
-    // КП Спецификация
     $('#btn-add-kp').click(function() {
         if (!selectedProduct) return;
 
-        let sizeKey = $('#ppSize').val();
-        let meta = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
         let qty = Number($('tr.row-propaket input[name="C5"]').val()) || 1;
         let unitPrice = Number($('input[name="C8"]').val()) || 0;
         let totalPrice = Number($('input[name="C9"]').val()) || 0;
 
-        let frontColors = parseInt($('#ppFront').val()) || 1;
-        let backColors = parseInt($('#ppBack').val()) || 0;
-        let boxInside = $('#ppBoxInside').val();
-
-        let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
-        let totalColors = frontColors + backColors;
-        let orientStr = meta && meta.orient ? meta.orient : '';
-        let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : (sizeKey || '');
-
         let itemTitle = '';
-        if (selectedProduct.id === 'ribbons') {
-            itemTitle = `Полиграфические услуги - ${selectedProduct.name} - печать в 1 цвет`;
-        } else if (selectedProduct.id === 'boxes') {
-            let insideTitleAdd = (boxInside === 'same') ? ' + печать изнутри (тот же дизайн)' : (boxInside === 'diff' ? ' + печать изнутри (новый дизайн)' : '');
-            itemTitle = `Полиграфические услуги - ${selectedProduct.name} - нанесение на крышку (${colorDeclension(frontColors)})${insideTitleAdd} ${dimStr}`;
-        } else if (selectedProduct.id === 'paper_fullcolor') {
-            itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - полноцвет, ${sidesCount} ${dimStr}`;
-        } else {
-            itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - ${colorDeclension(totalColors)}, ${sidesCount} ${dimStr}`;
+        let descHtml = '';
+        let deliveryDays = '5-7';
+
+        if (selectedProduct.isSquareArea) {
+            let w = Number($('#ppCustomW').val()) || 1000;
+            let h = Number($('#ppCustomH').val()) || 2000;
+            let areaM2 = (w / 1000) * (h / 1000);
+            itemTitle = `Полиграфические услуги - ${selectedProduct.name}`;
+            descHtml = `Размер: ${w}x${h} мм (${areaM2.toFixed(2)} м²), печать полноцветная интерьерная/наружная`;
+            deliveryDays = '3-5';
         }
-
-        let dimLabel = '';
-        let parenMatch = sizeKey ? sizeKey.match(/\((.+)\)/) : null;
-        let variantNote = parenMatch ? ` (${parenMatch[1]})` : '';
-
-        if (selectedProduct.id === 'boxes') {
-            dimLabel = `Размер: Длина ${meta.w} мм, Ширина ${meta.h} мм, Глубина (высота) ${meta.d} мм${variantNote}`;
-        } else if (selectedProduct.id === 'ribbons') {
-            dimLabel = `Параметры: ${sizeKey}`;
-        } else if (selectedProduct.id === 'tissue') {
-            dimLabel = `Размер: Ширина ${meta.w} мм, Длина ${meta.h} мм${variantNote}`;
-        } else if (meta && meta.d > 0) {
-            dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм, Глубина ${meta.d} мм${variantNote}`;
-        } else if (meta) {
-            dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм${variantNote}`;
-        } else {
-            dimLabel = sizeKey ? `Размер: ${sizeKey}` : '';
+        else if (selectedProduct.isConstruction) {
+            let sizeKey = $('#ppSize').val();
+            itemTitle = `Мобильная конструкция - ${selectedProduct.name}`;
+            descHtml = `Параметры: ${sizeKey}`;
+            deliveryDays = '2-4';
         }
+        else {
+            let sizeKey = $('#ppSize').val();
+            let meta = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
+            let frontColors = parseInt($('#ppFront').val()) || 1;
+            let backColors = parseInt($('#ppBack').val()) || 0;
+            let boxInside = $('#ppBoxInside').val();
 
-        let printText = '';
-        if (selectedProduct.id === 'ribbons') {
-            printText = `печать логотипа в 1 цвет (включена в цену прайса), метод роторной/шелкотрафаретной печати`;
-        } else if (selectedProduct.id === 'boxes') {
-            printText = `нанесение на крышку снаружи в ${colorWords(frontColors)} методом шелкографии`;
-            if (boxInside === 'same') printText += `<br><i>Печать изнутри: тот же дизайн и цвет (+45 ₸/шт)</i>`;
-            else if (boxInside === 'diff') printText += `<br><i>Печать изнутри: другой дизайн / размер (+90 ₸/шт)</i>`;
-        } else if (selectedProduct.id === 'paper_fullcolor') {
-            printText = `нанесение: полноцветная печать CMYK (${sidesCount})`;
-        } else {
-            printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
-            if (backColors > 0) printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
+            let sidesCount = (backColors > 0) ? '2 стороны' : '1 сторона';
+            let totalColors = frontColors + backColors;
+            let orientStr = meta && meta.orient ? meta.orient : '';
+            let dimStr = meta ? (meta.d > 0 ? `${meta.w}*${meta.h}*${meta.d} мм` : `${meta.w}*${meta.h} мм`) : (sizeKey || '');
+
+            if (selectedProduct.id === 'ribbons') {
+                itemTitle = `Полиграфические услуги - ${selectedProduct.name} - печать в 1 цвет`;
+            } else if (selectedProduct.id === 'boxes') {
+                let insideTitleAdd = (boxInside === 'same') ? ' + печать изнутри (тот же дизайн)' : (boxInside === 'diff' ? ' + печать изнутри (новый дизайн)' : '');
+                itemTitle = `Полиграфические услуги - ${selectedProduct.name} - нанесение на крышку (${colorDeclension(frontColors)})${insideTitleAdd} ${dimStr}`;
+            } else if (selectedProduct.id === 'paper_fullcolor') {
+                itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - полноцвет, ${sidesCount} ${dimStr}`;
+            } else {
+                itemTitle = `Полиграфические услуги - ${selectedProduct.name} ${orientStr} нанесение - ${colorDeclension(totalColors)}, ${sidesCount} ${dimStr}`;
+            }
+
+            let dimLabel = '';
+            let parenMatch = sizeKey ? sizeKey.match(/\((.+)\)/) : null;
+            let variantNote = parenMatch ? ` (${parenMatch[1]})` : '';
+
+            if (selectedProduct.id === 'boxes') {
+                dimLabel = `Размер: Длина ${meta.w} мм, Ширина ${meta.h} мм, Глубина (высота) ${meta.d} мм${variantNote}`;
+            } else if (selectedProduct.id === 'ribbons') {
+                dimLabel = `Параметры: ${sizeKey}`;
+            } else if (selectedProduct.id === 'tissue') {
+                dimLabel = `Размер: Ширина ${meta.w} мм, Длина ${meta.h} мм${variantNote}`;
+            } else if (meta && meta.d > 0) {
+                dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм, Глубина ${meta.d} мм${variantNote}`;
+            } else if (meta) {
+                dimLabel = `Размер: Ширина ${meta.w} мм, Длина (Высота) ${meta.h} мм${variantNote}`;
+            } else {
+                dimLabel = sizeKey ? `Размер: ${sizeKey}` : '';
+            }
+
+            let printText = '';
+            if (selectedProduct.id === 'ribbons') {
+                printText = `печать логотипа в 1 цвет (включена в цену прайса), метод роторной/шелкотрафаретной печати`;
+            } else if (selectedProduct.id === 'boxes') {
+                printText = `нанесение на крышку снаружи в ${colorWords(frontColors)} методом шелкографии`;
+                if (boxInside === 'same') printText += `<br><i>Печать изнутри: тот же дизайн и цвет (+45 ₸/шт)</i>`;
+                else if (boxInside === 'diff') printText += `<br><i>Печать изнутри: другой дизайн / размер (+90 ₸/шт)</i>`;
+            } else if (selectedProduct.id === 'paper_fullcolor') {
+                printText = `нанесение: полноцветная печать CMYK (${sidesCount})`;
+            } else {
+                printText = `нанесение спереди в ${colorWords(frontColors)} методом шелкографии`;
+                if (backColors > 0) printText += `, сзади в ${colorWords(backColors)} методом шелкографии`;
+            }
+
+            let extraText = [];
+            if ($('#optHandle').is(':checked')) extraText.push('замена ручек (+100 ₸)');
+            if ($('#optBow').is(':checked')) extraText.push('бант (+100 ₸)');
+            if (extraText.length > 0) printText += `<br><i>Доп. опции: ${extraText.join(', ')}</i>`;
+
+            descHtml = dimLabel ? `${dimLabel}<br>${printText}` : printText;
+            deliveryDays = getDeliveryDays(qty);
         }
-
-        let extraText = [];
-        if ($('#optHandle').is(':checked')) extraText.push('замена ручек (+100 ₸)');
-        if ($('#optBow').is(':checked')) extraText.push('бант (+100 ₸)');
-        if (extraText.length > 0) printText += `<br><i>Доп. опции: ${extraText.join(', ')}</i>`;
-
-        let descHtml = dimLabel ? `${dimLabel}<br>${printText}` : printText;
-        let deliveryDays = getDeliveryDays(qty);
 
         kpItems.push({
             id: Date.now() + Math.random(),
-            supplier: selectedProduct.supplierName || 'PROPAKET',
+            supplier: selectedProduct.supplierName || 'Поставщик',
             title: itemTitle,
             desc: descHtml,
             qty: qty,
@@ -1061,7 +1087,6 @@ $(document).ready(function() {
         $('#kpGrandDelivery').text(maxDeliveryText);
     }
 
-    // Умный поиск: Нанесение 1
     $('#serviceSearch').on('input focus', function() {
         let q = Number($('input[name="C5"]:visible').val()) || 1;
         let query = $(this).val().toLowerCase().trim();
@@ -1086,12 +1111,7 @@ $(document).ready(function() {
             let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
 
-            if (item.isBannerovoArea) {
-                let w = Number($('#bannerW').val()) || 1000;
-                let h = Number($('#bannerH').val()) || 2000;
-                let totArea = ((w / 1000) * (h / 1000) * q).toFixed(2);
-                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м² по ${item.pricePerM2} ₸/м²)`;
-            } else if (!item.vat) {
+            if (!item.vat) {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
                 displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
@@ -1118,10 +1138,9 @@ $(document).ready(function() {
             $('#searchResults').hide();
             $('#clearService, #delivery-wrap').show();
 
-            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche || activeService.isBannerovoArea));
+            $('#extraParamsWrap').toggle(!!(activeService.isDtfArea || activeService.isCliche));
             $('#clicheParams').toggle(!!activeService.isCliche);
             $('#dtfParams').toggle(!!activeService.isDtfArea);
-            $('#bannerovoParams').toggle(!!activeService.isBannerovoArea);
 
             calc();
         }
@@ -1130,11 +1149,10 @@ $(document).ready(function() {
     $('#clearService').click(function() {
         activeService = null;
         $('#serviceSearch').val('');
-        $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults, #selectedServiceCostBadge, #bannerovoParams').hide();
+        $('#clearService, #delivery-wrap, #extraParamsWrap, #searchResults, #selectedServiceCostBadge').hide();
         calc();
     });
 
-    // Умный поиск: Нанесение 2
     $('#btn-show-second-service').click(function() {
         $('#second-supplier-panel').data('open', true).slideDown(150);
         $(this).hide();
@@ -1144,7 +1162,7 @@ $(document).ready(function() {
         activeService2 = null;
         $('#second-supplier-panel').data('open', false).slideUp(150);
         $('#serviceSearch2').val('');
-        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2, #bannerovoParams2').hide();
+        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2').hide();
         $('#btn-show-second-service').show();
         calc();
     });
@@ -1173,12 +1191,7 @@ $(document).ready(function() {
             let displayCost = rawCost;
             let taxLabel = item.vat ? 'с НДС' : 'без НДС';
 
-            if (item.isBannerovoArea) {
-                let w = Number($('#bannerW2').val()) || 1000;
-                let h = Number($('#bannerH2').val()) || 2000;
-                let totArea = ((w / 1000) * (h / 1000) * q).toFixed(2);
-                taxLabel = `расход: <strong>${displayCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м² по ${item.pricePerM2} ₸/м²)`;
-            } else if (!item.vat) {
+            if (!item.vat) {
                 let f4_markup = markup * 1.16;
                 let f_f4 = rawCost * f4_markup;
                 displayCost = Math.round(rawCost + (f_f4 * 16 / 116));
@@ -1205,10 +1218,9 @@ $(document).ready(function() {
             $('#searchResults2').hide();
             $('#clearService2, #delivery-wrap2').show();
 
-            $('#extraParamsWrap2').toggle(!!(activeService2.isDtfArea || activeService2.isCliche || activeService2.isBannerovoArea));
+            $('#extraParamsWrap2').toggle(!!(activeService2.isDtfArea || activeService2.isCliche));
             $('#clicheParams2').toggle(!!activeService2.isCliche);
             $('#dtfParams2').toggle(!!activeService2.isDtfArea);
-            $('#bannerovoParams2').toggle(!!activeService2.isBannerovoArea);
 
             calc();
         }
@@ -1217,7 +1229,7 @@ $(document).ready(function() {
     $('#clearService2').click(function() {
         activeService2 = null;
         $('#serviceSearch2').val('');
-        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2, #bannerovoParams2').hide();
+        $('#clearService2, #delivery-wrap2, #extraParamsWrap2, #searchResults2, #selectedServiceCostBadge2').hide();
         calc();
     });
 
@@ -1227,7 +1239,6 @@ $(document).ready(function() {
         }
     });
 
-    // ДТФ точки
     $('#addDtfPoint').click(function() {
         $('#dtf-points').append(`
             <span class="dtf-point" style="margin-left: 5px;">
@@ -1258,7 +1269,6 @@ $(document).ready(function() {
         calc();
     });
 
-    // Клише
     $('#clicheExists').change(function() {
         $('#clicheAreaBlock').css('opacity', $(this).is(':checked') ? '0.4' : '1');
         calc();
@@ -1283,24 +1293,6 @@ $(document).ready(function() {
         calc();
     });
 
-    // Габариты Баннерово
-    $('#bannerW, #bannerH').on('input change', function() {
-        let w = Number($('#bannerW').val()) || 0;
-        let h = Number($('#bannerH').val()) || 0;
-        let area = (w / 1000) * (h / 1000);
-        $('#bannerAreaOut').text(`(${area.toFixed(2)} м²)`);
-        calc();
-    });
-
-    $('#bannerW2, #bannerH2').on('input change', function() {
-        let w = Number($('#bannerW2').val()) || 0;
-        let h = Number($('#bannerH2').val()) || 0;
-        let area = (w / 1000) * (h / 1000);
-        $('#bannerAreaOut2').text(`(${area.toFixed(2)} м²)`);
-        calc();
-    });
-
-    // Кэшбек: синхронизация при вводе
     $('input[name="K1"]').on('input', function() {
         let v = checkStrictNum($(this), 0);
         if (!isNaN(v)) {
@@ -1330,7 +1322,6 @@ var R = {};
 function calc() {
     let hasError = false;
 
-    // Валидация общих полей
     let $f6 = $('tr:visible input[name="F6"]');
     T.F6 = $f6.length ? checkStrictNum($f6, 0) : 0;
     if (isNaN(T.F6)) hasError = true;
@@ -1381,18 +1372,8 @@ function calc() {
         if (isNaN(usdRateVal)) hasError = true;
     }
 
-    // Валидация параметров Баннерово, клише и ДТФ
-    if (currentMode === 'order') {
-        if (activeService && activeService.isBannerovoArea) {
-            let bw = checkStrictNum($('#bannerW'), 1000);
-            let bh = checkStrictNum($('#bannerH'), 2000);
-            if (isNaN(bw) || isNaN(bh)) hasError = true;
-        }
-        if (activeService2 && activeService2.isBannerovoArea) {
-            let bw2 = checkStrictNum($('#bannerW2'), 1000);
-            let bh2 = checkStrictNum($('#bannerH2'), 2000);
-            if (isNaN(bw2) || isNaN(bh2)) hasError = true;
-        }
+    // Валидация нанесения: работает и в "Заказ", и в "Склад"
+    if (currentMode === 'order' || currentMode === 'sklad') {
         if (activeService && activeService.isCliche && !$('#clicheExists').is(':checked')) {
             let cw = checkStrictNum($('#clicheW'), 50);
             let ch = checkStrictNum($('#clicheH'), 50);
@@ -1418,12 +1399,17 @@ function calc() {
             });
         }
     } else if (currentMode === 'propaket') {
-        let pf = checkStrictNum($('#ppFront'), 1);
-        let pb = checkStrictNum($('#ppBack'), 0);
-        if (isNaN(pf) || isNaN(pb)) hasError = true;
+        if (selectedProduct && selectedProduct.isSquareArea) {
+            let cw = checkStrictNum($('#ppCustomW'), 1000);
+            let ch = checkStrictNum($('#ppCustomH'), 2000);
+            if (isNaN(cw) || isNaN(ch)) hasError = true;
+        } else if (selectedProduct && !selectedProduct.isConstruction) {
+            let pf = checkStrictNum($('#ppFront'), 1);
+            let pb = checkStrictNum($('#ppBack'), 0);
+            if (isNaN(pf) || isNaN(pb)) hasError = true;
+        }
     }
 
-    // Если обнаружена ошибка ввода — выводим NaN и останавливаем расчет
     if (hasError) {
         $('input[name="C8"]').val('NaN');
         $('input[name="C9"]').val('NaN');
@@ -1448,7 +1434,7 @@ function calc() {
     var origin = $('tr:visible input[name="origin"]:checked').val() || 'kazakhstan';
     var vat = $('tr:visible input[name="vat"]:checked').val() || 'withVAT';
 
-    // Расчет упаковки и продукции
+    // 1. Расчет для вкладки "ПРОДУКЦИЯ / ПАКЕТЫ"
     if (currentMode === 'propaket') {
         origin = 'kazakhstan'; 
         vat = 'withVAT';
@@ -1458,20 +1444,36 @@ function calc() {
         let calcQty = quantity;
 
         if (selectedProduct) {
-            let sizeKey = $('#ppSize').val();
-            let ppFront = parseInt($('#ppFront').val()) || 1;
-            let ppBack = parseInt($('#ppBack').val()) || 0;
-            let addHandle = $('#optHandle').is(':checked');
-            let addBow = $('#optBow').is(':checked');
-            let boxInside = $('#ppBoxInside').val();
+            if (selectedProduct.isSquareArea) {
+                let w = Number($('#ppCustomW').val()) || 1000;
+                let h = Number($('#ppCustomH').val()) || 2000;
+                let areaM2 = (w / 1000) * (h / 1000);
+                unitBase = Math.round(areaM2 * selectedProduct.pricePerM2);
+                itemCost = Math.round(unitBase * quantity);
+                calcQty = quantity;
+            }
+            else if (selectedProduct.isConstruction) {
+                let sizeKey = $('#ppSize').val();
+                let c = selectedProduct.sizes ? selectedProduct.sizes[sizeKey] : null;
+                unitBase = c ? c.price : 0;
+                itemCost = unitBase * quantity;
+                calcQty = quantity;
+            }
+            else {
+                let sizeKey = $('#ppSize').val();
+                let ppFront = parseInt($('#ppFront').val()) || 1;
+                let ppBack = parseInt($('#ppBack').val()) || 0;
+                let addHandle = $('#optHandle').is(':checked');
+                let addBow = $('#optBow').is(':checked');
+                let boxInside = $('#ppBoxInside').val();
 
-            let info = selectedProduct.calcFn
-                ? selectedProduct.calcFn(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside)
-                : (typeof calculatePropaketItem === 'function' ? calculatePropaketItem(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside) : { cost: 0, unitPrice: 0 });
-
-            itemCost = info.cost || 0;
-            unitBase = info.unitPrice || 0;
-            calcQty = info.calcQty || quantity;
+                if (typeof calculatePropaketItem === 'function') {
+                    let info = calculatePropaketItem(selectedProduct, sizeKey, quantity, ppFront, ppBack, addHandle, addBow, boxInside);
+                    itemCost = info.cost || 0;
+                    unitBase = info.unitPrice || 0;
+                    calcQty = info.calcQty || quantity;
+                }
+            }
         }
 
         if (itemCost > 0) {
@@ -1489,20 +1491,13 @@ function calc() {
             autoCashExpense += dCost;
         }
     } 
-    // Расчет основного заказа
-    else if (currentMode === 'order') {
+    // 2. Расчет нанесений 1 и 2 — работает и для "ЗАКАЗ", и для "СКЛАД (Алматы)"
+    else if (currentMode === 'order' || currentMode === 'sklad') {
         if (activeService) {
             let rawCost = activeService.fn(quantity);
             if (activeService.vat) {
                 supplierCostWithVat += rawCost;
-                if (activeService.isBannerovoArea) {
-                    let w = Number($('#bannerW').val()) || 1000;
-                    let h = Number($('#bannerH').val()) || 2000;
-                    let totArea = ((w / 1000) * (h / 1000) * quantity).toFixed(2);
-                    $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea} м²)`).show();
-                } else {
-                    $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
-                }
+                $('#selectedServiceCostBadge').html(`Расход: <strong>${rawCost.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
             } else {
                 supplierCostWithoutVat += rawCost;
                 let f4_markup = markup * 1.16;
@@ -1522,14 +1517,7 @@ function calc() {
             let rawCost2 = getService2Cost(quantity);
             if (activeService2.vat) {
                 supplierCostWithVat += rawCost2;
-                if (activeService2.isBannerovoArea) {
-                    let w2 = Number($('#bannerW2').val()) || 1000;
-                    let h2 = Number($('#bannerH2').val()) || 2000;
-                    let totArea2 = ((w2 / 1000) * (h2 / 1000) * quantity).toFixed(2);
-                    $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС, ${totArea2} м²)`).show();
-                } else {
-                    $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
-                }
+                $('#selectedServiceCostBadge2').html(`Расход: <strong>${rawCost2.toLocaleString('ru-RU')} ₸</strong> (с НДС)`).show();
             } else {
                 supplierCostWithoutVat += rawCost2;
                 let f4_markup = markup * 1.16;
@@ -1565,10 +1553,17 @@ function calc() {
     F.F5 = T.F5 * markup;                                        
     R.F4 = T.F4 + (F.F4 * 16 / 116);
 
-    var simpExpenseFactor = 2.90 / 1.35;
-    R.F4_simp = T.F4_simp * simpExpenseFactor;
-    F.F4_simp = R.F4_simp * markup; 
-    
+    // УПРОЩЕНКА (х2 маржа при 1.35 + динамический рост налогов)
+    var simpMarkupFactor = 2.90 / 1.35; // 290 ₸ при 1.35
+    F.markup_simp = markup * simpMarkupFactor;
+    var hiddenIncomeK = 1.130604; // Скрытый доход 13.06%
+
+    F.F4_simp = T.F4_simp * F.markup_simp;
+    let vat_f4_simp = F.F4_simp * 16 / 116;
+    let kpn_f4_simp = (F.F4_simp - vat_f4_simp) * 0.20;
+    let pure_f4_simp = T.F4_simp + vat_f4_simp + kpn_f4_simp;
+    R.F4_simp = Math.round(pure_f4_simp * hiddenIncomeK);
+
     T.PB20 = T.F6 * 4000;                                        
     T.PB21 = T.F7 * 1800;                                        
     T.PB22 = T.PB20 + T.PB21;                                    
@@ -1606,8 +1601,13 @@ function calc() {
             else if (vat == 'simplified') {
                 T.PB4 = T.C5 + T.C6;
                 T.PB5 = (T.C3 * T.PB4) * addDiscountK;
-                R.PB5 = T.PB5 * simpExpenseFactor;
-                T.PB12 = R.PB5 * markup;
+                T.PB12 = Math.round(T.PB5 * F.markup_simp);
+                
+                let prodVat = T.PB12 * 16 / 116;
+                let prodKpn = (T.PB12 - prodVat) * 0.20;
+                let pureProductCost = T.PB5 + prodVat + prodKpn;
+                
+                R.PB5 = Math.round(pureProductCost * hiddenIncomeK);
                 
                 T.PB11 = T.F3 + R.F4 + R.F4_simp + T.F5 + T.PB22 + T.K3;
                 T.PB13 = F.F3 + F.F4 + F.F4_simp + F.F5 + F.PB22 + T.K3;
@@ -1625,8 +1625,11 @@ function calc() {
             T.PB4 = T.C5 + T.C6;                                            
             T.PB5 = (T.PB3 * T.PB4) * addDiscountK;                        
             if (vat == 'simplified') {
-                R.PB5 = T.PB5 * simpExpenseFactor;
-                T.PB12 = R.PB5 * markup;
+                T.PB12 = Math.round(T.PB5 * F.markup_simp);
+                let prodVat = T.PB12 * 16 / 116;
+                let prodKpn = (T.PB12 - prodVat) * 0.20;
+                let pureProductCost = T.PB5 + prodVat + prodKpn;
+                R.PB5 = Math.round(pureProductCost * hiddenIncomeK);
             } else {
                 T.PB12 = T.PB5 * F.markup;                                       
                 R.PB5 = T.PB5 + (T.PB12 * 16 / 116);
@@ -1641,7 +1644,7 @@ function calc() {
             T.K4 = Math.round(T.F9 + T.K3);                             
         }
     } else {
-        // Режим Склад (Алматы)
+        // Режим Склад (Алматы) с поддержкой нанесений
         var productInfo = $('select[name="product"]').val().split(';');
         var sellingPrice = Number(productInfo[0]);   
         var purchasePrice = Number(productInfo[1]);  
